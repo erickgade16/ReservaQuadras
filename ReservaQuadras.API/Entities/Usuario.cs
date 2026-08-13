@@ -1,4 +1,4 @@
-﻿namespace ReservaQuadras.API.Entites
+﻿namespace ReservaQuadras.API.Entities
 {
     public class Usuario
     {

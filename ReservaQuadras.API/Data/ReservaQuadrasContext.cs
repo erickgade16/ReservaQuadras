@@ -1,4 +1,4 @@
-﻿using ReservaQuadras.API.Entites;
+﻿using ReservaQuadras.API.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ReservaQuadras.API.Data

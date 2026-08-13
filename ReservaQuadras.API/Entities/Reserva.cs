@@ -1,4 +1,4 @@
-﻿namespace ReservaQuadras.API.Entites
+﻿namespace ReservaQuadras.API.Entities
 {
     public class Reserva
     {
@@ -18,8 +18,8 @@
 
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 
-        public Usuario Usuario { get; set; } = null!;
+        public Usuario? Usuario { get; set; }
 
-        public Quadra Quadra { get; set; } = null!;
+        public Quadra? Quadra { get; set; }
     }
 }

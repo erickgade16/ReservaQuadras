@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ReservaQuadras.API.Data;
 
@@ -11,9 +12,11 @@ using ReservaQuadras.API.Data;
 namespace ReservaQuadras.API.Migrations
 {
     [DbContext(typeof(ReservaQuadrasContext))]
-    partial class ReservaQuadrasContextModelSnapshot : ModelSnapshot
+    [Migration("20260813200228_AdicionarHorarioFuncionamentoQuadra")]
+    partial class AdicionarHorarioFuncionamentoQuadra
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

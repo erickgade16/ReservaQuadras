@@ -1,4 +1,4 @@
-﻿namespace ReservaQuadras.API.Entites
+﻿namespace ReservaQuadras.API.Entities
 {
     public class Quadra
     {
@@ -13,5 +13,9 @@
         public bool Ativa { get; set; } = true;
 
         public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
+
+        public TimeSpan HoraAbertura { get; set; }
+
+        public TimeSpan HoraFechamento { get; set; }
     }
 }
