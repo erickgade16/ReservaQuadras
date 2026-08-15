@@ -20,8 +20,8 @@ export default function DataTable({
       component={Paper}
       elevation={0}
       sx={{
-        border: "1px solid #e2e8e4",
-        borderRadius: 3,
+        border: "none",
+        borderRadius: 0,
         overflow: "hidden",
       }}
     >

@@ -6,6 +6,7 @@ export default function PageHeader({
   descricao,
   textoBotao,
   onClick,
+  mb = 4,
 }) {
   return (
     <Box
@@ -13,7 +14,9 @@ export default function PageHeader({
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        mb: 4,
+        mb,
+        px: 3,
+        py: 2.5,
       }}
     >
       <Box>

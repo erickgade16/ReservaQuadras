@@ -2,20 +2,32 @@ import { useEffect, useState } from "react";
 
 import {
   Box,
-  Chip,
+  MenuItem,
+  TextField,
   Typography,
 } from "@mui/material";
 
-import { buscarQuadras } from "../../services/api";
+import { buscarQuadras, criarQuadra } from "../../services/api";
 import NovaQuadra from "./NovaQuadra";
 import PageHeader from "../../components/PageHeader";
 import DataTable from "../../components/DataTable";
+import StatusChip from "../../components/StatusChip";
+import PageTable from "../../components/PageTable";
+import FormDialog from "../../components/FormDialog";
 
 export default function Quadras() {
   const [quadras, setQuadras] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-  const [modo, setModo] = useState("lista");
+  const [formularioAberto, setFormularioAberto] = useState(false);
+const [salvando, setSalvando] = useState(false);
+
+const [nome, setNome] = useState("");
+const [tipo, setTipo] = useState("");
+const [precoHora, setPrecoHora] = useState("");
+const [horaAbertura, setHoraAbertura] = useState("");
+const [horaFechamento, setHoraFechamento] = useState("");
+const [ativa, setAtiva] = useState(true);
 
   useEffect(() => {
     carregarQuadras();
@@ -37,34 +49,54 @@ export default function Quadras() {
     }
   }
 
-  if (modo === "nova") {
-    return (
-      <NovaQuadra
-        onVoltar={() => setModo("lista")}
-        onCriada={() => {
-          setModo("lista");
-          carregarQuadras();
-        }}
-      />
-    );
+  function limparFormulario() {
+  setNome("");
+  setTipo("");
+  setPrecoHora("");
+  setHoraAbertura("");
+  setHoraFechamento("");
+  setAtiva(true);
+}
+
+function fecharFormulario() {
+  limparFormulario();
+  setErro("");
+  setFormularioAberto(false);
+}
+
+async function salvarQuadra() {
+  try {
+    setSalvando(true);
+    setErro("");
+
+    const quadra = {
+  nome,
+  tipo,
+  precoHora: Number(precoHora),
+  ativa,
+  horaAbertura: `${horaAbertura}:00`,
+  horaFechamento: `${horaFechamento}:00`,
+};
+
+     await criarQuadra(quadra);
+
+    fecharFormulario();
+    await carregarQuadras();
+  } catch (error) {
+    console.error(error);
+    setErro("Não foi possível criar a quadra.");
+  } finally {
+    setSalvando(false);
   }
+}
 
   return (
     <Box>
-      <PageHeader
-        titulo="Quadras"
-        descricao="Gerencie as quadras disponíveis para reserva."
-        textoBotao="Novo"
-        onClick={() => setModo("nova")}
-      />
-
-      {erro && (
-        <Typography color="error" sx={{ mb: 2 }}>
-          {erro}
-        </Typography>
-      )}
-
-      <DataTable
+<PageTable
+  titulo="Quadras"
+  descricao="Gerencie as quadras disponíveis para reserva."
+  textoBotao="Novo"
+  onClick={() => setFormularioAberto(true)}
   columns={[
     {
       field: "nome",
@@ -92,19 +124,7 @@ export default function Quadras() {
       field: "ativa",
       label: "Status",
       render: (quadra) => (
-        <Chip
-          label={quadra.ativa ? "Ativa" : "Inativa"}
-          size="small"
-          sx={{
-            fontWeight: 600,
-            backgroundColor: quadra.ativa
-              ? "#dcfce7"
-              : "#fee2e2",
-            color: quadra.ativa
-              ? "#166534"
-              : "#991b1b",
-          }}
-        />
+        <StatusChip ativo={quadra.ativa} />
       ),
     },
   ]}
@@ -112,6 +132,108 @@ export default function Quadras() {
   loading={carregando}
   emptyMessage="Nenhuma quadra cadastrada."
 />
+
+<FormDialog
+  open={formularioAberto}
+  title="Nova quadra"
+  onClose={fecharFormulario}
+  onSubmit={salvarQuadra}
+  loading={salvando}
+>
+  <Box
+    sx={{
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+      pt: 1,
+    }}
+  >
+    <TextField
+      label="Nome"
+      value={nome}
+      onChange={(event) => setNome(event.target.value)}
+      fullWidth
+      required
+    />
+
+    <TextField
+      label="Tipo"
+      value={tipo}
+      onChange={(event) => setTipo(event.target.value)}
+      fullWidth
+      required
+    />
+
+    <TextField
+      label="Preço por hora"
+      type="number"
+      value={precoHora}
+      onChange={(event) => setPrecoHora(event.target.value)}
+      fullWidth
+      required
+    />
+
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 2,
+      }}
+    >
+      <TextField
+        label="Hora de abertura"
+        type="time"
+        value={horaAbertura}
+        onChange={(event) =>
+          setHoraAbertura(event.target.value)
+        }
+        InputLabelProps={{
+          shrink: true,
+        }}
+        fullWidth
+        required
+      />
+
+      <TextField
+        label="Hora de fechamento"
+        type="time"
+        value={horaFechamento}
+        onChange={(event) =>
+          setHoraFechamento(event.target.value)
+        }
+        InputLabelProps={{
+          shrink: true,
+        }}
+        fullWidth
+        required
+      />
+    </Box>
+
+    <TextField
+      select
+      label="Status"
+      value={ativa ? "true" : "false"}
+      onChange={(event) =>
+        setAtiva(event.target.value === "true")
+      }
+      fullWidth
+    >
+      <MenuItem value="true">
+        Ativa
+      </MenuItem>
+
+      <MenuItem value="false">
+        Inativa
+      </MenuItem>
+    </TextField>
+
+    {erro && (
+      <Typography color="error">
+        {erro}
+      </Typography>
+    )}
+  </Box>
+</FormDialog>
     </Box>
   );
 }

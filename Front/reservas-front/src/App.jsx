@@ -4,6 +4,7 @@ import { Box, Toolbar } from "@mui/material";
 import Menu from "./components/Menu";
 import Quadras from "./pages/Quadras/Quadras";
 import Usuarios from "./pages/Usuarios/Usuarios";
+import Reservas from "./pages/Reservas/Reservas";
 
 
 const drawerWidth = 240;
@@ -17,7 +18,7 @@ function App() {
         return <Quadras />;
 
       case "Reservas":
-        return <div>Reservas</div>;
+        return <Reservas />;
 
       case "Usuários":
         return <Usuarios />;
