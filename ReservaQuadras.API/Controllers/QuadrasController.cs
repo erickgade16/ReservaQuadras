@@ -32,5 +32,15 @@ namespace ReservaQuadras.API.Controllers
 
             return CreatedAtAction(nameof(Get), new { id = quadra.Id }, quadra);
         }
+
+        [HttpPut("{quadraId}")]
+        public async Task<IActionResult> Put(Quadra quadra)
+        {
+            _context.Quadras.Update(quadra);
+
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(Get), new { id = quadra.Id }, quadra);
+        }
     }
 }

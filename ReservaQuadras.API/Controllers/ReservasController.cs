@@ -65,6 +65,45 @@ public class ReservasController : ControllerBase
         return Ok(reserva);
     }
 
+    [HttpPut("{Id}")]
+    public async Task<IActionResult> Put(int Id, Reserva reserva)
+    {
+        var usuario = await _context.Usuarios
+            .FindAsync(reserva.UsuarioId);
+
+        if (usuario == null)
+            return BadRequest("Usuário não encontrado.");
+
+        var quadra = await _context.Quadras
+            .FindAsync(reserva.QuadraId);
+
+        if (quadra == null)
+            return BadRequest("Quadra não encontrada.");
+
+        if (!quadra.Ativa)
+            return BadRequest("A quadra está inativa.");
+
+        var conflito = await _context.Reservas
+    .AnyAsync(r =>
+        r.Id != Id &&
+        r.QuadraId == reserva.QuadraId &&
+        r.DataReserva == reserva.DataReserva &&
+        r.Status == "ATIVA" &&
+        reserva.HoraInicio < r.HoraFim &&
+        reserva.HoraFim > r.HoraInicio);
+
+        if (conflito)
+        {
+            return BadRequest("A quadra já está reservada nesse horário.");
+        }
+
+        _context.Reservas.Update(reserva);
+
+        await _context.SaveChangesAsync();
+
+        return Ok(reserva);
+    }
+
     [HttpGet("quadra/{quadraId}")]
     public async Task<IActionResult> GetReservasPorQuadra(
     int quadraId,

@@ -15,8 +15,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler =
             System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 
-        options.JsonSerializerOptions.Converters.Add(
-            new DateTimeConverter());
+        //options.JsonSerializerOptions.Converters.Add(
+        //    new DateTimeConverter());
 
         options.JsonSerializerOptions.Converters.Add(
             new TimeSpanConverter());

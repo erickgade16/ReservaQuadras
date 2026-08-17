@@ -4,17 +4,28 @@ using System.Text.Json.Serialization;
 
 public class TimeSpanConverter : JsonConverter<TimeSpan>
 {
-    private const string Format = @"hh\:mm\:ss";
-
     public override TimeSpan Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
         JsonSerializerOptions options)
     {
-        return TimeSpan.ParseExact(
-            reader.GetString()!,
-            Format,
-            CultureInfo.InvariantCulture);
+        var valor = reader.GetString();
+
+        if (string.IsNullOrWhiteSpace(valor))
+        {
+            throw new JsonException("Horário não informado.");
+        }
+
+        if (TimeSpan.TryParse(
+            valor,
+            CultureInfo.InvariantCulture,
+            out var resultado))
+        {
+            return resultado;
+        }
+
+        throw new JsonException(
+            $"Horário inválido: {valor}");
     }
 
     public override void Write(
@@ -23,6 +34,6 @@ public class TimeSpanConverter : JsonConverter<TimeSpan>
         JsonSerializerOptions options)
     {
         writer.WriteStringValue(
-            value.ToString(Format));
+            value.ToString(@"hh\:mm"));
     }
 }

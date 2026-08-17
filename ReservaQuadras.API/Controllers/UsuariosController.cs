@@ -37,5 +37,17 @@ namespace ReservaQuadras.API.Controllers
                 new { id = usuario.Id },
                 usuario);
         }
+        [HttpPut]
+        public async Task<IActionResult> Put(Usuario usuario)
+        {
+            _context.Usuarios.Update(usuario);
+
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(
+                nameof(Get),
+                new { id = usuario.Id },
+                usuario);
+        }
     }
 }
