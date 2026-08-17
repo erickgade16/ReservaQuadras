@@ -35,19 +35,47 @@ namespace ReservaQuadras.API.Controllers
             return CreatedAtAction(
                 nameof(Get),
                 new { id = usuario.Id },
-                usuario);
+                usuario
+                );
+
         }
-        [HttpPut]
-        public async Task<IActionResult> Put(Usuario usuario)
+
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, Usuario usuario)
         {
-            _context.Usuarios.Update(usuario);
+
+            var usuarioExistente = await _context.Usuarios.FindAsync(id);
+
+            if (usuarioExistente == null)
+                return NotFound("Usuário não encontrado.");
+
+            usuarioExistente.Nome = usuario.Nome;
+            usuarioExistente.Email = usuario.Email;
+
+            if (!string.IsNullOrWhiteSpace(usuario.Senha))
+            {
+                usuarioExistente.Senha = usuario.Senha;
+            }
 
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(
-                nameof(Get),
-                new { id = usuario.Id },
-                usuario);
+            return Ok(usuarioExistente);
+        }
+
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> AlterarStatus(int id, [FromBody] bool ativo)
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+
+            if (usuario == null)
+                return NotFound("Usuário não encontrado.");
+
+            usuario.Ativo = ativo;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(usuario);
         }
     }
 }

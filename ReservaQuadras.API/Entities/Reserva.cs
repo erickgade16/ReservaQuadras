@@ -14,7 +14,7 @@
 
         public TimeSpan HoraFim { get; set; }
 
-        public string Status { get; set; } = "ATIVA";
+        public bool Ativo { get; set; }
 
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 

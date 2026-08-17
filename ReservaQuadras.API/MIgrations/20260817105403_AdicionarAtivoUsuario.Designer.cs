@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ReservaQuadras.API.Data;
 
@@ -11,9 +12,11 @@ using ReservaQuadras.API.Data;
 namespace ReservaQuadras.API.Migrations
 {
     [DbContext(typeof(ReservaQuadrasContext))]
-    partial class ReservaQuadrasContextModelSnapshot : ModelSnapshot
+    [Migration("20260817105403_AdicionarAtivoUsuario")]
+    partial class AdicionarAtivoUsuario
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,9 +66,6 @@ namespace ReservaQuadras.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("datetime2");
 
@@ -80,6 +80,10 @@ namespace ReservaQuadras.API.Migrations
 
                     b.Property<int>("QuadraId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UsuarioId")
                         .HasColumnType("int");

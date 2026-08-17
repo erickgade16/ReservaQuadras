@@ -4,13 +4,13 @@
     {
         public int Id { get; set; }
 
-        public string Nome { get; set; } = string.Empty;
+        public string Nome { get; set; }
 
-        public string Tipo { get; set; } = string.Empty;
+        public string Tipo { get; set; }
 
         public decimal PrecoHora { get; set; }
 
-        public bool Ativa { get; set; } = true;
+        public bool Ativa { get; set; }
 
         public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
 

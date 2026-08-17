@@ -126,3 +126,52 @@ export async function editarReserva(id, reserva) {
     throw new Error("Erro ao editar reserva");
   }
 }
+
+export async function alterarStatusUsuario(id, ativo) {
+  const response = await fetch(
+    `${API_URL}/Usuarios/${id}/status`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ativo),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Erro ao alterar status do usuário");
+  }
+
+  return response.json();
+}
+
+export async function alterarStatusReserva(id, ativo) {
+  const response = await fetch(
+    `${API_URL}/Reservas/${id}/status`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ativo),
+    }
+  );
+
+  if (!response.ok) {
+    const erro = await response.text();
+
+    console.error(
+      "Erro ao alterar status:",
+      response.status,
+      erro
+    );
+
+    throw new Error(
+      "Erro ao alterar status da reserva"
+    );
+  }
+
+  return response.json();
+}
+

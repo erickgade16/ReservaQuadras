@@ -16,11 +16,12 @@ import {
   buscarQuadras,
   criarReserva,
   editarReserva,
+  alterarStatusReserva,
 } from "../../services/api";
 
 import PageTable from "../../components/PageTable";
 import FormDialog from "../../components/FormDialog";
-import StatusChip from "../../components/StatusChip";
+import StatusSwitch from "../../components/StatusSwitch";
 
 import {
   validarCampo,
@@ -37,7 +38,6 @@ export default function Reservas() {
   const [erro, setErro] = useState("");
 
   const [formularioAberto, setFormularioAberto] = useState(false);
-
   const [reservaEditando, setReservaEditando] = useState(null);
 
   const [usuarioId, setUsuarioId] = useState("");
@@ -45,7 +45,8 @@ export default function Reservas() {
   const [dataReserva, setDataReserva] = useState("");
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFim, setHoraFim] = useState("");
-  const [status, setStatus] = useState("ATIVA");
+const [ativo, setAtivo] = useState(true);
+
 
   useEffect(() => {
     carregarReservas();
@@ -91,7 +92,7 @@ export default function Reservas() {
     setDataReserva("");
     setHoraInicio("");
     setHoraFim("");
-    setStatus("ATIVA");
+    setAtivo(true);
     setReservaEditando(null);
   }
 
@@ -109,21 +110,49 @@ export default function Reservas() {
     setUsuarioId(String(reserva.usuarioId));
     setQuadraId(String(reserva.quadraId));
 
+    /*
+     * Data
+     *
+     * Se a API retornar:
+     * 2026-08-17T00:00:00
+     *
+     * pegamos somente:
+     * 2026-08-17
+     *
+     * que é o formato aceito pelo input type="date".
+     */
     setDataReserva(
       reserva.dataReserva
         ? reserva.dataReserva.substring(0, 10)
         : ""
     );
 
+    /*
+     * Hora
+     *
+     * API:
+     * 20:00:00
+     *
+     * Input:
+     * 20:00
+     */
     setHoraInicio(
-      reserva.horaInicio?.substring(0, 5) || ""
+      reserva.horaInicio
+        ? reserva.horaInicio.substring(0, 5)
+        : ""
     );
 
     setHoraFim(
-      reserva.horaFim?.substring(0, 5) || ""
+      reserva.horaFim
+        ? reserva.horaFim.substring(0, 5)
+        : ""
     );
 
-    setStatus(reserva.status || "ATIVA");
+    setAtivo(
+      reserva.ativo !== undefined
+        ? reserva.ativo
+        : true
+    );
 
     setFormularioAberto(true);
   }
@@ -168,24 +197,35 @@ export default function Reservas() {
       return;
     }
 
+    /*
+     * Validação adicional:
+     * horário de fim precisa ser maior que horário de início.
+     */
+    if (horaFim <= horaInicio) {
+      setErro(
+        "O horário de fim deve ser maior que o horário de início."
+      );
+      return;
+    }
+
     try {
       setSalvando(true);
       setErro("");
 
       const dados = {
-        id: reservaEditando?.id,
-        usuarioId: Number(usuarioId),
-        quadraId: Number(quadraId),
-        dataReserva: dataReserva,
-        horaInicio: `${horaInicio}:00`,
-        horaFim: `${horaFim}:00`,
-        status: status,
-      };
+  ...(reservaEditando?.id && {
+    id: reservaEditando.id,
+  }),
 
-      console.log(
-        "JSON ENVIADO:",
-        JSON.stringify(dados, null, 2)
-      );
+  usuarioId: Number(usuarioId),
+  quadraId: Number(quadraId),
+  dataReserva,
+  horaInicio: `${horaInicio}:00`,
+  horaFim: `${horaFim}:00`,
+  ativo,
+};
+
+      console.log("Dados enviados:", dados);
 
       if (reservaEditando) {
         await editarReserva(
@@ -197,21 +237,64 @@ export default function Reservas() {
       }
 
       fecharFormulario();
-      await carregarReservas();
 
+      await carregarReservas();
     } catch (error) {
       console.error(error);
 
-      setErro(
-        reservaEditando
-          ? "Não foi possível editar a reserva."
-          : "Não foi possível criar a reserva."
-      );
+      /*
+       * Caso a API retorne uma mensagem específica,
+       * tenta mostrar para facilitar o diagnóstico.
+       */
+      const mensagemApi =
+        error?.response?.data?.message ||
+        error?.response?.data?.title;
 
+      setErro(
+        mensagemApi ||
+          (
+            reservaEditando
+              ? "Não foi possível editar a reserva."
+              : "Não foi possível criar a reserva."
+          )
+      );
     } finally {
       setSalvando(false);
     }
   }
+
+  async function alterarStatus(reserva) {
+  const novoAtivo = !reserva.ativo;
+
+  try {
+    setErro("");
+
+    await alterarStatusReserva(
+      reserva.id,
+      novoAtivo
+    );
+
+    setReservas((reservasAtuais) =>
+      reservasAtuais.map((item) =>
+        item.id === reserva.id
+          ? {
+              ...item,
+              ativo: novoAtivo,
+            }
+          : item
+      )
+    );
+  } catch (error) {
+    console.error(
+      "Erro ao alterar status:",
+      error
+    );
+
+    setErro(
+      "Não foi possível alterar o status da reserva."
+    );
+  }
+}
 
   return (
     <Box>
@@ -243,34 +326,42 @@ export default function Reservas() {
                 return "-";
               }
 
-              return new Date(reserva.dataReserva).toLocaleDateString(
-                "pt-BR",
-                {
-                  timeZone: "UTC",
-                }
-              );
+              return new Date(
+                reserva.dataReserva
+              ).toLocaleDateString("pt-BR", {
+                timeZone: "UTC",
+              });
             },
           },
 
           {
             field: "horaInicio",
             label: "Início",
+            render: (reserva) =>
+              reserva.horaInicio
+                ? reserva.horaInicio.substring(0, 5)
+                : "-",
           },
 
           {
             field: "horaFim",
             label: "Fim",
+            render: (reserva) =>
+              reserva.horaFim
+                ? reserva.horaFim.substring(0, 5)
+                : "-",
           },
 
           {
-            field: "status",
+            field: "ativo",
             label: "Status",
             render: (reserva) => (
-              <StatusChip
-                ativo={reserva.status === "ATIVA"}
-                labelAtivo="Ativa"
-                labelInativo="Cancelada"
-              />
+              <StatusSwitch
+  checked={Boolean(reserva.ativo)}
+  onChange={() =>
+    alterarStatus(reserva)
+  }
+/>
             ),
           },
 
@@ -281,7 +372,9 @@ export default function Reservas() {
               <Button
                 variant="outlined"
                 size="small"
-                startIcon={<EditRoundedIcon />}
+                startIcon={
+                  <EditRoundedIcon />
+                }
                 onClick={() =>
                   abrirFormularioEdicao(reserva)
                 }
@@ -320,6 +413,7 @@ export default function Reservas() {
             pt: 1,
           }}
         >
+          {/* USUÁRIO */}
           <TextField
             select
             label="Usuário"
@@ -340,6 +434,7 @@ export default function Reservas() {
             ))}
           </TextField>
 
+          {/* QUADRA */}
           <TextField
             select
             label="Quadra"
@@ -362,6 +457,7 @@ export default function Reservas() {
               ))}
           </TextField>
 
+          {/* DATA */}
           <TextField
             label="Data da reserva"
             type="date"
@@ -378,10 +474,12 @@ export default function Reservas() {
             required
           />
 
+          {/* HORÁRIOS */}
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+              gridTemplateColumns:
+                "1fr 1fr",
               gap: 2,
             }}
           >
@@ -390,7 +488,9 @@ export default function Reservas() {
               type="time"
               value={horaInicio}
               onChange={(event) =>
-                setHoraInicio(event.target.value)
+                setHoraInicio(
+                  event.target.value
+                )
               }
               slotProps={{
                 inputLabel: {
@@ -406,7 +506,9 @@ export default function Reservas() {
               type="time"
               value={horaFim}
               onChange={(event) =>
-                setHoraFim(event.target.value)
+                setHoraFim(
+                  event.target.value
+                )
               }
               slotProps={{
                 inputLabel: {
@@ -418,24 +520,7 @@ export default function Reservas() {
             />
           </Box>
 
-          <TextField
-            select
-            label="Status"
-            value={status}
-            onChange={(event) =>
-              setStatus(event.target.value)
-            }
-            fullWidth
-          >
-            <MenuItem value="ATIVA">
-              Ativa
-            </MenuItem>
-
-            <MenuItem value="CANCELADA">
-              Cancelada
-            </MenuItem>
-          </TextField>
-
+          {/* ERRO */}
           {erro && (
             <Typography color="error">
               {erro}

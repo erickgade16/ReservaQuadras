@@ -49,7 +49,7 @@ public class ReservasController : ControllerBase
        .AnyAsync(r =>
            r.QuadraId == reserva.QuadraId &&
            r.DataReserva == reserva.DataReserva &&
-           r.Status == "ATIVA" &&
+           r.Ativo == true &&
            reserva.HoraInicio < r.HoraFim &&
            reserva.HoraFim > r.HoraInicio);
 
@@ -88,7 +88,7 @@ public class ReservasController : ControllerBase
         r.Id != Id &&
         r.QuadraId == reserva.QuadraId &&
         r.DataReserva == reserva.DataReserva &&
-        r.Status == "ATIVA" &&
+        r.Ativo == true &&
         reserva.HoraInicio < r.HoraFim &&
         reserva.HoraFim > r.HoraInicio);
 
@@ -119,7 +119,7 @@ public class ReservasController : ControllerBase
             .Where(r =>
                 r.QuadraId == quadraId &&
                 r.DataReserva.Date == data.Date &&
-                r.Status == "ATIVA")
+                r.Ativo == true)
             .OrderBy(r => r.HoraInicio)
             .ToListAsync();
 
@@ -145,7 +145,7 @@ public class ReservasController : ControllerBase
             .Where(r =>
                 r.QuadraId == quadraId &&
                 r.DataReserva.Date == data.Date &&
-                r.Status == "ATIVA")
+                r.Ativo == true)
             .ToListAsync();
 
         var horariosDisponiveis = new List<object>();
@@ -173,5 +173,22 @@ public class ReservasController : ControllerBase
         }
 
         return Ok(horariosDisponiveis);
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> AlterarStatus(
+     int id,
+     [FromBody] bool ativo)
+    {
+        var reserva = await _context.Reservas.FindAsync(id);
+
+        if (reserva == null)
+            return NotFound("Reserva não encontrada.");
+
+        reserva.Ativo = ativo;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(reserva);
     }
 }

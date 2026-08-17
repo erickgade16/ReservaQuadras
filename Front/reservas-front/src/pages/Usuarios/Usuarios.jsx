@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   Box,
   Button,
+  Switch,
   TextField,
   Typography,
 } from "@mui/material";
@@ -13,6 +14,7 @@ import {
   buscarUsuarios,
   criarUsuario,
   editarUsuario,
+  alterarStatusUsuario,
 } from "../../services/api";
 
 import PageTable from "../../components/PageTable";
@@ -24,6 +26,8 @@ import {
   email,
   minLength,
 } from "../../utils/validation";
+
+import StatusSwitch from "../../components/StatusSwitch";
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
@@ -95,7 +99,6 @@ export default function Usuarios() {
     setNome(usuario.nome || "");
     setEmailUsuario(usuario.email || "");
 
-    // Na edição deixamos a senha vazia.
     setSenha("");
 
     setFormularioAberto(true);
@@ -144,8 +147,6 @@ export default function Usuarios() {
         email: emailUsuario.trim(),
       };
 
-      // Só envia senha quando estiver criando
-      // ou quando o usuário preencher uma nova senha.
       if (!usuarioEditando || senha.trim()) {
         usuario.senha = senha;
       }
@@ -173,6 +174,39 @@ export default function Usuarios() {
       setSalvando(false);
     }
   }
+
+ async function alterarStatus(usuario) {
+  const novoAtivo = !usuario.ativo;
+
+  try {
+    setErro("");
+
+    await alterarStatusUsuario(
+      usuario.id,
+      novoAtivo
+    );
+
+    setUsuarios((usuariosAtuais) =>
+      usuariosAtuais.map((item) =>
+        item.id === usuario.id
+          ? {
+              ...item,
+              ativo: novoAtivo,
+            }
+          : item
+      )
+    );
+  } catch (error) {
+    console.error(
+      "Erro ao alterar status:",
+      error
+    );
+
+    setErro(
+      "Não foi possível alterar o status do usuário."
+    );
+  }
+}
 
   return (
     <Box>
@@ -204,6 +238,17 @@ export default function Usuarios() {
           },
 
           {
+  field: "ativo",
+  label: "Status",
+  render: (usuario) => (
+    <StatusSwitch
+      checked={usuario.ativo}
+      onChange={() => alterarStatus(usuario)}
+    />
+  ),
+},
+
+          {
             field: "acoes",
             label: "Ações",
             render: (usuario) => (
@@ -223,6 +268,8 @@ export default function Usuarios() {
               </Button>
             ),
           },
+
+
         ]}
         rows={usuarios}
         loading={carregando}
