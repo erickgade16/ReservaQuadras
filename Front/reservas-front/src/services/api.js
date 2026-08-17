@@ -25,6 +25,20 @@ export async function criarQuadra(quadra) {
   return await response.json();
 }
 
+export async function editarQuadra(id, quadra) {
+  const response = await fetch(`${API_URL}/Quadras/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(quadra),
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao editar quadra");
+  }
+}
+
 export async function buscarUsuarios() {
   const response = await fetch(`${API_URL}/Usuarios`);
 
@@ -55,7 +69,21 @@ export async function criarUsuario(usuario) {
   return await response.json();
 }
 
- export async function buscarReservas() {
+export async function editarUsuario(id, usuario) {
+  const response = await fetch(`${API_URL}/Usuarios/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(usuario),
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao editar usuário");
+  }
+}
+
+export async function buscarReservas() {
   const response = await fetch(`${API_URL}/Reservas`);
 
   if (!response.ok) {
@@ -83,4 +111,18 @@ export async function criarReserva(reserva) {
   }
 
   return await response.json();
+}
+
+export async function editarReserva(id, reserva) {
+  const response = await fetch(`${API_URL}/Reservas/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(reserva),
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao editar reserva");
+  }
 }
