@@ -14,11 +14,12 @@ import {
   buscarQuadras,
   criarQuadra,
   editarQuadra,
+  alterarStatusQuadra
 } from "../../services/api";
 
-import StatusChip from "../../components/StatusChip";
 import PageTable from "../../components/PageTable";
 import FormDialog from "../../components/FormDialog";
+import StatusSwitch from "../../components/StatusSwitch";
 
 import {
   validarCampo,
@@ -180,6 +181,34 @@ export default function Quadras() {
     }
   }
 
+  async function alterarStatus(quadra) {
+  const novaAtiva = !quadra.ativa;
+
+  try {
+    await alterarStatusQuadra(
+      quadra.id,
+      novaAtiva
+    );
+
+    setQuadras((quadrasAtuais) =>
+      quadrasAtuais.map((item) =>
+        item.id === quadra.id
+          ? { ...item, ativa: novaAtiva }
+          : item
+      )
+    );
+  } catch (error) {
+    console.error(
+      "Erro ao alterar status da quadra:",
+      error
+    );
+
+    setErro(
+      "Não foi possível alterar o status da quadra."
+    );
+  }
+}
+
   return (
     <Box>
       <PageTable
@@ -216,12 +245,15 @@ export default function Quadras() {
           },
 
           {
-            field: "ativa",
-            label: "Status",
-            render: (quadra) => (
-              <StatusChip ativo={quadra.ativa} />
-            ),
-          },
+  field: "ativa",
+  label: "Status",
+  render: (quadra) => (
+    <StatusSwitch
+      checked={quadra.ativa}
+      onChange={() => alterarStatus(quadra)}
+    />
+  ),
+},
 
           {
             field: "acoes",

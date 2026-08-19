@@ -175,3 +175,34 @@ export async function alterarStatusReserva(id, ativo) {
   return response.json();
 }
 
+export async function alterarStatusQuadra(id, ativa) {
+  const response = await fetch(
+    `${API_URL}/Quadras/${id}/status`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ativa),
+    }
+  );
+
+  if (!response.ok) {
+    const erro = await response.text();
+
+    console.error(
+      "Erro ao alterar status:",
+      response.status,
+      erro
+    );
+
+    throw new Error(
+      "Erro ao alterar status da quadra"
+    );
+  }
+
+  return response.json();
+}
+
+
+

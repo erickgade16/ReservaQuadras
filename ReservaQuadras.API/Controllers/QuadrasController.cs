@@ -42,5 +42,22 @@ namespace ReservaQuadras.API.Controllers
 
             return CreatedAtAction(nameof(Get), new { id = quadra.Id }, quadra);
         }
+
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> AlterarStatus(
+     int id,
+     [FromBody] bool ativa)
+        {
+            var quadra = await _context.Quadras.FindAsync(id);
+
+            if (quadra == null)
+                return NotFound("Quadra não encontrada.");
+
+            quadra.Ativa = ativa;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(quadra);
+        }
     }
 }
