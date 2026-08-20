@@ -46,12 +46,13 @@ public class ReservasController : ControllerBase
             return BadRequest("A quadra está inativa.");
 
         var conflito = await _context.Reservas
-       .AnyAsync(r =>
-           r.QuadraId == reserva.QuadraId &&
-           r.DataReserva == reserva.DataReserva &&
-           r.Ativo == true &&
-           reserva.HoraInicio < r.HoraFim &&
-           reserva.HoraFim > r.HoraInicio);
+    .AnyAsync(r =>
+        r.QuadraId == reserva.QuadraId &&
+        r.DataReserva == reserva.DataReserva &&
+        r.Ativo &&
+        reserva.HoraInicio < r.HoraFim &&
+        reserva.HoraFim > r.HoraInicio
+    );
 
         if (conflito)
         {
@@ -68,11 +69,17 @@ public class ReservasController : ControllerBase
     [HttpPut("{Id}")]
     public async Task<IActionResult> Put(int Id, Reserva reserva)
     {
+        if (Id != reserva.Id)
+            return BadRequest("O ID da URL é diferente do ID da reserva.");
+
         var usuario = await _context.Usuarios
             .FindAsync(reserva.UsuarioId);
 
         if (usuario == null)
             return BadRequest("Usuário não encontrado.");
+
+        if (!usuario.Ativo)
+            return BadRequest("O usuário está inativo.");
 
         var quadra = await _context.Quadras
             .FindAsync(reserva.QuadraId);
@@ -83,18 +90,38 @@ public class ReservasController : ControllerBase
         if (!quadra.Ativa)
             return BadRequest("A quadra está inativa.");
 
+        if (reserva.HoraInicio >= reserva.HoraFim)
+        {
+            return BadRequest(
+                "O horário de início deve ser menor que o horário de fim."
+            );
+        }
+
+        if (reserva.HoraInicio < quadra.HoraAbertura ||
+            reserva.HoraFim > quadra.HoraFechamento)
+        {
+            return BadRequest(
+                $"A reserva deve estar entre " +
+                $"{quadra.HoraAbertura:hh\\:mm} e " +
+                $"{quadra.HoraFechamento:hh\\:mm}."
+            );
+        }
+
         var conflito = await _context.Reservas
-    .AnyAsync(r =>
-        r.Id != Id &&
-        r.QuadraId == reserva.QuadraId &&
-        r.DataReserva == reserva.DataReserva &&
-        r.Ativo == true &&
-        reserva.HoraInicio < r.HoraFim &&
-        reserva.HoraFim > r.HoraInicio);
+            .AnyAsync(r =>
+                r.Id != reserva.Id &&
+                r.QuadraId == reserva.QuadraId &&
+                r.DataReserva == reserva.DataReserva &&
+                r.Ativo &&
+                reserva.HoraInicio < r.HoraFim &&
+                reserva.HoraFim > r.HoraInicio
+            );
 
         if (conflito)
         {
-            return BadRequest("A quadra já está reservada nesse horário.");
+            return BadRequest(
+                "A quadra já está reservada nesse horário."
+            );
         }
 
         _context.Reservas.Update(reserva);

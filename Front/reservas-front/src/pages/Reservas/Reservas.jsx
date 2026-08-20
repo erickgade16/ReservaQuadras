@@ -26,6 +26,9 @@ import StatusSwitch from "../../components/StatusSwitch";
 import {
   validarCampo,
   required,
+  horaMaiorQue,
+  dataFutura,
+  horarioDentroDoFuncionamento,
 } from "../../utils/validation";
 
 export default function Reservas() {
@@ -59,6 +62,8 @@ const [ativo, setAtivo] = useState(true);
       setErro("");
 
       const dados = await buscarReservas();
+
+      
 
       setReservas(dados);
     } catch (error) {
@@ -110,32 +115,13 @@ const [ativo, setAtivo] = useState(true);
     setUsuarioId(String(reserva.usuarioId));
     setQuadraId(String(reserva.quadraId));
 
-    /*
-     * Data
-     *
-     * Se a API retornar:
-     * 2026-08-17T00:00:00
-     *
-     * pegamos somente:
-     * 2026-08-17
-     *
-     * que é o formato aceito pelo input type="date".
-     */
     setDataReserva(
       reserva.dataReserva
         ? reserva.dataReserva.substring(0, 10)
         : ""
     );
 
-    /*
-     * Hora
-     *
-     * API:
-     * 20:00:00
-     *
-     * Input:
-     * 20:00
-     */
+
     setHoraInicio(
       reserva.horaInicio
         ? reserva.horaInicio.substring(0, 5)
@@ -164,6 +150,11 @@ const [ativo, setAtivo] = useState(true);
   }
 
   function validarFormulario() {
+
+const quadraSelecionada = quadras.find(
+  (quadra) => quadra.id === Number(quadraId)
+);
+
     const erros = {
       usuarioId: validarCampo(usuarioId, [
         required("Selecione um usuário."),
@@ -174,33 +165,72 @@ const [ativo, setAtivo] = useState(true);
       ]),
 
       dataReserva: validarCampo(dataReserva, [
-        required("Informe a data da reserva."),
-      ]),
+  required("Informe a data da reserva."),
+  () =>
+    dataFutura(
+      dataReserva,
+      "A data da reserva não pode ser anterior a hoje."
+    ),
+]),
 
       horaInicio: validarCampo(horaInicio, [
         required("Informe o horário de início."),
       ]),
 
       horaFim: validarCampo(horaFim, [
-        required("Informe o horário de fim."),
-      ]),
+  required("Informe o horário de fim."),
+
+  () =>
+    horaMaiorQue(
+      horaInicio,
+      horaFim,
+      "O horário de fim deve ser maior que o horário de início."
+    ),
+
+  () =>
+    horarioDentroDoFuncionamento(
+      horaInicio,
+      horaFim,
+      quadraSelecionada?.horaAbertura,
+      quadraSelecionada?.horaFechamento,
+      `A reserva deve estar entre ${quadraSelecionada?.horaAbertura} e ${quadraSelecionada?.horaFechamento}.`
+    ),
+]),
+
+    
     };
 
     return Object.values(erros).find(Boolean) || null;
   }
 
   async function salvarReserva() {
-    const erroValidacao = validarFormulario();
+  const erroValidacao = validarFormulario();
+
+  if (erroValidacao) {
+    setErro(erroValidacao);
+    return;
+  }
+
+  const quadraSelecionada = quadras.find(
+    (quadra) => quadra.id === Number(quadraId)
+  );
+
+  if (!quadraSelecionada) {
+    setErro("Quadra não encontrada.");
+    return;
+  }
+
+  if (!quadraSelecionada.ativa) {
+    setErro("A quadra selecionada está inativa.");
+    return;
+  }
 
     if (erroValidacao) {
       setErro(erroValidacao);
       return;
     }
 
-    /*
-     * Validação adicional:
-     * horário de fim precisa ser maior que horário de início.
-     */
+
     if (horaFim <= horaInicio) {
       setErro(
         "O horário de fim deve ser maior que o horário de início."

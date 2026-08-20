@@ -25,21 +25,16 @@ import {
   validarCampo,
   required,
   positive,
+  horaMaiorQue,
 } from "../../utils/validation";
 
 export default function Quadras() {
   const [quadras, setQuadras] = useState([]);
-
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
-
   const [formularioAberto, setFormularioAberto] = useState(false);
-
-  // Guarda a quadra que está sendo editada.
-  // null = estamos criando uma nova.
   const [quadraEditando, setQuadraEditando] = useState(null);
-
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState("");
   const [precoHora, setPrecoHora] = useState("");
@@ -124,9 +119,15 @@ export default function Quadras() {
       ]),
 
       horaFechamento: validarCampo(horaFechamento, [
-        required("Informe o horário de fechamento."),
-      ]),
-    };
+      required("Informe o horário de fechamento."),
+      () =>
+        horaMaiorQue(
+          horaAbertura,
+          horaFechamento,
+          "O horário de fechamento deve ser maior que o horário de abertura."
+        ),
+    ]),
+  };
 
     return Object.values(erros).find(Boolean) || null;
   }

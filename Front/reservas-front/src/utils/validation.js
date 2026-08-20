@@ -1,56 +1,114 @@
-export const required =
-  (message = "Campo obrigatório.") =>
-    (value) => {
-      if (
-        value === undefined ||
-        value === null ||
-        String(value).trim() === ""
-      ) {
-        return message;
-      }
+export function required(mensagem) {
+  return (valor) => {
+    if (
+      valor === null ||
+      valor === undefined ||
+      String(valor).trim() === ""
+    ) {
+      return mensagem;
+    }
 
+    return null;
+  };
+}
+
+export function email(mensagem) {
+  return (valor) => {
+    if (!valor) {
       return null;
-    };
+    }
 
-export const email =
-  (message = "E-mail inválido.") =>
-    (value) => {
-      if (!value) {
-        return null;
-      }
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(valor.trim()) ? null : mensagem;
+  };
+}
 
-      return regex.test(value) ? null : message;
-    };
+export function minLength(tamanho, mensagem) {
+  return (valor) => {
+    if (!valor) {
+      return null;
+    }
 
-export const minLength =
-  (length, message) =>
-    (value) => {
-      if (!value) {
-        return null;
-      }
+    return String(valor).length >= tamanho
+      ? null
+      : mensagem;
+  };
+}
 
-      return value.length < length ? message : null;
-    };
+export function positive(mensagem) {
+  return (valor) => {
+    if (valor === null || valor === undefined || valor === "") {
+      return null;
+    }
 
-export const positive =
-  (message = "Informe um valor maior que zero.") =>
-    (value) => {
-      if (value === undefined || value === null || value === "") {
-        return null;
-      }
+    return Number(valor) > 0 ? null : mensagem;
+  };
+}
 
-      return Number(value) > 0 ? null : message;
-    };
+export function horaMaiorQue(
+  horaInicial,
+  horaFinal,
+  mensagem
+) {
+  if (!horaInicial || !horaFinal) {
+    return null;
+  }
 
-export function validarCampo(value, regras) {
-  for (const regra of regras) {
-    const erro = regra(value);
+  if (horaInicial >= horaFinal) {
+    return mensagem;
+  }
+
+  return null;
+}
+
+export function validarCampo(valor, validacoes) {
+  for (const validacao of validacoes) {
+    const erro = validacao(valor);
 
     if (erro) {
       return erro;
     }
+  }
+
+  return null;
+}
+
+export function dataFutura(data, mensagem) {
+  if (!data) {
+    return null;
+  }
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const dataSelecionada = new Date(`${data}T00:00:00`);
+
+  return dataSelecionada >= hoje ? null : mensagem;
+}
+
+
+export function horarioDentroDoFuncionamento(
+  horaInicio,
+  horaFim,
+  horaAbertura,
+  horaFechamento,
+  mensagem
+) {
+  if (
+    !horaInicio ||
+    !horaFim ||
+    !horaAbertura ||
+    !horaFechamento
+  ) {
+    return null;
+  }
+
+  if (
+    horaInicio < horaAbertura ||
+    horaFim > horaFechamento
+  ) {
+    return mensagem;
   }
 
   return null;
