@@ -31,15 +31,11 @@ import StatusSwitch from "../../components/StatusSwitch";
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
-
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
-
   const [formularioAberto, setFormularioAberto] = useState(false);
-
   const [usuarioEditando, setUsuarioEditando] = useState(null);
-
   const [nome, setNome] = useState("");
   const [emailUsuario, setEmailUsuario] = useState("");
   const [senha, setSenha] = useState("");
@@ -64,8 +60,8 @@ export default function Usuarios() {
         setUsuarios([]);
       }
     } catch (error) {
-      console.error("Erro ao carregar usuários:", error);
-      setErro("Não foi possível carregar os usuários.");
+  console.error(error);
+  setErro(error.message);
       setUsuarios([]);
     } finally {
       setCarregando(false);
@@ -151,8 +147,6 @@ export default function Usuarios() {
         usuario.senha = senha;
       }
 
-      console.log("Enviando usuário:", usuario);
-
       if (usuarioEditando) {
         await editarUsuario(usuarioEditando.id, usuario);
       } else {
@@ -163,13 +157,8 @@ export default function Usuarios() {
 
       await carregarUsuarios();
     } catch (error) {
-      console.error("Erro ao salvar usuário:", error);
-
-      setErro(
-        usuarioEditando
-          ? "Não foi possível editar o usuário."
-          : "Não foi possível criar o usuário."
-      );
+  console.error(error);
+  setErro(error.message);
     } finally {
       setSalvando(false);
     }
@@ -197,14 +186,8 @@ export default function Usuarios() {
       )
     );
   } catch (error) {
-    console.error(
-      "Erro ao alterar status:",
-      error
-    );
-
-    setErro(
-      "Não foi possível alterar o status do usuário."
-    );
+  console.error(error);
+  setErro(error.message);
   }
 }
 

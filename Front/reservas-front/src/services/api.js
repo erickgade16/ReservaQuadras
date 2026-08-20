@@ -1,13 +1,56 @@
 const API_URL = "https://localhost:7127/api";
 
+async function tratarErroResponse(response, mensagemPadrao) {
+  let erro;
+
+  try {
+    erro = await response.json();
+  } catch {
+    throw new Error(mensagemPadrao);
+  }
+
+  // Erros de validação do ASP.NET
+  if (erro?.errors) {
+    const mensagens = Object.values(erro.errors).flat();
+
+    if (mensagens.length > 0) {
+      throw new Error(mensagens[0]);
+    }
+  }
+
+  // API retornando uma string diretamente
+  if (typeof erro === "string") {
+    throw new Error(erro);
+  }
+
+  // API retornando { message: "..." }
+  if (erro?.message) {
+    throw new Error(erro.message);
+  }
+
+  // API retornando { title: "..." }
+  if (erro?.title) {
+    throw new Error(erro.title);
+  }
+
+  throw new Error(mensagemPadrao);
+}
+
+// =========================
+// QUADRAS
+// =========================
+
 export async function buscarQuadras() {
   const response = await fetch(`${API_URL}/Quadras`);
 
   if (!response.ok) {
-    throw new Error("Erro ao buscar quadras");
+    await tratarErroResponse(
+      response,
+      "Não foi possível buscar as quadras."
+    );
   }
 
-  return await response.json();
+  return response.json();
 }
 
 export async function criarQuadra(quadra) {
@@ -20,9 +63,13 @@ export async function criarQuadra(quadra) {
   });
 
   if (!response.ok) {
-    throw new Error("Erro ao criar quadra");
+    await tratarErroResponse(
+      response,
+      "Não foi possível criar a quadra."
+    );
   }
-  return await response.json();
+
+  return response.json();
 }
 
 export async function editarQuadra(id, quadra) {
@@ -35,140 +82,9 @@ export async function editarQuadra(id, quadra) {
   });
 
   if (!response.ok) {
-    throw new Error("Erro ao editar quadra");
-  }
-}
-
-export async function buscarUsuarios() {
-  const response = await fetch(`${API_URL}/Usuarios`);
-
-  if (!response.ok) {
-    throw new Error("Erro ao buscar usuários");
-  }
-
-  return await response.json();
-}
-
-export async function criarUsuario(usuario) {
-  const response = await fetch(`${API_URL}/Usuarios`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(usuario),
-  });
-
-  if (!response.ok) {
-    const erro = await response.text();
-
-    console.error("Erro ao criar usuário:", erro);
-
-    throw new Error("Erro ao criar usuário.");
-  }
-
-  return await response.json();
-}
-
-export async function editarUsuario(id, usuario) {
-  const response = await fetch(`${API_URL}/Usuarios/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(usuario),
-  });
-
-  if (!response.ok) {
-    throw new Error("Erro ao editar usuário");
-  }
-}
-
-export async function buscarReservas() {
-  const response = await fetch(`${API_URL}/Reservas`);
-
-  if (!response.ok) {
-    throw new Error("Erro ao buscar reservas.");
-  }
-
-  return await response.json();
-}
-
-export async function criarReserva(reserva) {
-  const response = await fetch(`${API_URL}/Reservas`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(reserva),
-  });
-
-  if (!response.ok) {
-    const erro = await response.text();
-
-    console.error("Erro ao criar reserva:", erro);
-
-    throw new Error("Erro ao criar reserva.");
-  }
-
-  return await response.json();
-}
-
-export async function editarReserva(id, reserva) {
-  const response = await fetch(`${API_URL}/Reservas/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(reserva),
-  });
-
-  if (!response.ok) {
-    throw new Error("Erro ao editar reserva");
-  }
-}
-
-export async function alterarStatusUsuario(id, ativo) {
-  const response = await fetch(
-    `${API_URL}/Usuarios/${id}/status`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(ativo),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Erro ao alterar status do usuário");
-  }
-
-  return response.json();
-}
-
-export async function alterarStatusReserva(id, ativo) {
-  const response = await fetch(
-    `${API_URL}/Reservas/${id}/status`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(ativo),
-    }
-  );
-
-  if (!response.ok) {
-    const erro = await response.text();
-
-    console.error(
-      "Erro ao alterar status:",
-      response.status,
-      erro
-    );
-
-    throw new Error(
-      "Erro ao alterar status da reserva"
+    await tratarErroResponse(
+      response,
+      "Não foi possível editar a quadra."
     );
   }
 
@@ -188,21 +104,165 @@ export async function alterarStatusQuadra(id, ativa) {
   );
 
   if (!response.ok) {
-    const erro = await response.text();
-
-    console.error(
-      "Erro ao alterar status:",
-      response.status,
-      erro
-    );
-
-    throw new Error(
-      "Erro ao alterar status da quadra"
+    await tratarErroResponse(
+      response,
+      "Não foi possível alterar o status da quadra."
     );
   }
 
   return response.json();
 }
 
+// =========================
+// USUÁRIOS
+// =========================
 
+export async function buscarUsuarios() {
+  const response = await fetch(`${API_URL}/Usuarios`);
 
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível buscar os usuários."
+    );
+  }
+
+  return response.json();
+}
+
+export async function criarUsuario(usuario) {
+  const response = await fetch(`${API_URL}/Usuarios`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(usuario),
+  });
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível criar o usuário."
+    );
+  }
+
+  return response.json();
+}
+
+export async function editarUsuario(id, usuario) {
+  const response = await fetch(`${API_URL}/Usuarios/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(usuario),
+  });
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível editar o usuário."
+    );
+  }
+
+  return response.json();
+}
+
+export async function alterarStatusUsuario(id, ativo) {
+  const response = await fetch(
+    `${API_URL}/Usuarios/${id}/status`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ativo),
+    }
+  );
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível alterar o status do usuário."
+    );
+  }
+
+  return response.json();
+}
+
+// =========================
+// RESERVAS
+// =========================
+
+export async function buscarReservas() {
+  const response = await fetch(`${API_URL}/Reservas`);
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível buscar as reservas."
+    );
+  }
+
+  return response.json();
+}
+
+export async function criarReserva(reserva) {
+  const response = await fetch(`${API_URL}/Reservas`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(reserva),
+  });
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível criar a reserva."
+    );
+  }
+
+  return response.json();
+}
+
+export async function editarReserva(id, reserva) {
+  const response = await fetch(`${API_URL}/Reservas/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(reserva),
+  });
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível editar a reserva."
+    );
+  }
+
+  return response.json();
+}
+
+export async function alterarStatusReserva(id, ativa) {
+  const response = await fetch(
+    `${API_URL}/Reservas/${id}/status`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ativa),
+    }
+  );
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível alterar o status da reserva."
+    );
+  }
+
+  return response.json();
+}

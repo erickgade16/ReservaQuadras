@@ -67,8 +67,8 @@ const [ativo, setAtivo] = useState(true);
 
       setReservas(dados);
     } catch (error) {
-      console.error(error);
-      setErro("Não foi possível carregar as reservas.");
+  console.error(error);
+  setErro(error.message);
     } finally {
       setCarregando(false);
     }
@@ -84,10 +84,8 @@ const [ativo, setAtivo] = useState(true);
       setUsuarios(usuariosData);
       setQuadras(quadrasData);
     } catch (error) {
-      console.error(error);
-      setErro(
-        "Não foi possível carregar os dados do formulário."
-      );
+  console.error(error);
+  setErro(error.message);
     }
   }
 
@@ -270,12 +268,9 @@ const quadraSelecionada = quadras.find(
 
       await carregarReservas();
     } catch (error) {
-      console.error(error);
+  console.error(error);
+  setErro(error.message);
 
-      /*
-       * Caso a API retorne uma mensagem específica,
-       * tenta mostrar para facilitar o diagnóstico.
-       */
       const mensagemApi =
         error?.response?.data?.message ||
         error?.response?.data?.title;
@@ -315,14 +310,8 @@ const quadraSelecionada = quadras.find(
       )
     );
   } catch (error) {
-    console.error(
-      "Erro ao alterar status:",
-      error
-    );
-
-    setErro(
-      "Não foi possível alterar o status da reserva."
-    );
+  console.error(error);
+  setErro(error.message);
   }
 }
 

@@ -55,8 +55,8 @@ export default function Quadras() {
 
       setQuadras(dados);
     } catch (error) {
-      console.error(error);
-      setErro("Não foi possível carregar as quadras.");
+  console.error(error);
+  setErro(error.message);
     } finally {
       setCarregando(false);
     }
@@ -170,13 +170,8 @@ export default function Quadras() {
       fecharFormulario();
       await carregarQuadras();
     } catch (error) {
-      console.error(error);
-
-      setErro(
-        quadraEditando
-          ? "Não foi possível editar a quadra."
-          : "Não foi possível criar a quadra."
-      );
+  console.error(error);
+  setErro(error.message);
     } finally {
       setSalvando(false);
     }
@@ -199,14 +194,8 @@ export default function Quadras() {
       )
     );
   } catch (error) {
-    console.error(
-      "Erro ao alterar status da quadra:",
-      error
-    );
-
-    setErro(
-      "Não foi possível alterar o status da quadra."
-    );
+  console.error(error);
+  setErro(error.message);
   }
 }
 
