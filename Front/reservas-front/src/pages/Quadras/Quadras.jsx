@@ -28,6 +28,7 @@ import {
   horaMaiorQue,
 } from "../../utils/validation";
 import ConfirmDialog from "../../components/ConfirmDialog";
+import AppSnackbar from "../../components/AppSnackbar";
 
 export default function Quadras() {
   const [quadras, setQuadras] = useState([]);
@@ -45,6 +46,9 @@ export default function Quadras() {
   const [alterandoStatus, setAlterandoStatus] = useState(false);
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
   const [quadraStatusPendente, setQuadraStatusPendente] = useState(null);
+  const [snackbarAberto, setSnackbarAberto] = useState(false);
+  const [snackbarMensagem, setSnackbarMensagem] = useState("");
+  const [snackbarSeveridade, setSnackbarSeveridade] = useState("success");
 
   useEffect(() => {
     carregarQuadras();
@@ -162,8 +166,6 @@ export default function Quadras() {
         horaFechamento,
       };
 
-      console.log("JSON enviado para API:", quadra);
-
       if (quadraEditando) {
         await editarQuadra(
           quadraEditando.id,
@@ -172,12 +174,23 @@ export default function Quadras() {
             ...quadra,
           }
         );
+
+        fecharFormulario();
+        await carregarQuadras();
+
+        mostrarSnackbar(
+          "Quadra atualizada com sucesso!"
+        );
       } else {
         await criarQuadra(quadra);
-      }
 
-      fecharFormulario();
-      await carregarQuadras();
+        fecharFormulario();
+        await carregarQuadras();
+
+        mostrarSnackbar(
+          "Quadra criada com sucesso!"
+        );
+      }
     } catch (error) {
       console.error(error);
       setErro(error.message);
@@ -215,9 +228,15 @@ export default function Quadras() {
 
       setConfirmacaoAberta(false);
       setQuadraStatusPendente(null);
+
+      mostrarSnackbar(
+        novaAtiva
+          ? "Quadra ativada com sucesso!"
+          : "Quadra desativada com sucesso!"
+      );
     } catch (error) {
       console.error(error);
-      setErro(error.message);
+     mostrarSnackbar(error.message, "error");
     } finally {
       setAlterandoStatus(false);
     }
@@ -226,6 +245,19 @@ export default function Quadras() {
   function abrirConfirmacaoStatus(quadra) {
     setQuadraStatusPendente(quadra);
     setConfirmacaoAberta(true);
+  }
+
+  function mostrarSnackbar(
+    mensagem,
+    severidade = "success"
+  ) {
+    setSnackbarMensagem(mensagem);
+    setSnackbarSeveridade(severidade);
+    setSnackbarAberto(true);
+  }
+
+  function fecharSnackbar() {
+    setSnackbarAberto(false);
   }
 
   return (
@@ -442,6 +474,12 @@ export default function Quadras() {
         }}
         onConfirm={alterarStatus}
         loading={alterandoStatus}
+      />
+      <AppSnackbar
+        open={snackbarAberto}
+        message={snackbarMensagem}
+        severity={snackbarSeveridade}
+        onClose={fecharSnackbar}
       />
     </Box>
   );

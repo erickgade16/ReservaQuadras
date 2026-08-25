@@ -31,6 +31,7 @@ import {
   horarioDentroDoFuncionamento,
 } from "../../utils/validation";
 import ConfirmDialog from "../../components/ConfirmDialog";
+import AppSnackbar from "../../components/AppSnackbar";
 
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
@@ -53,6 +54,9 @@ export default function Reservas() {
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
   const [reservaStatusPendente, setReservaStatusPendente] = useState(null);
   const [alterandoStatus, setAlterandoStatus] = useState(false);
+  const [snackbarAberto, setSnackbarAberto] = useState(false);
+  const [snackbarMensagem, setSnackbarMensagem] = useState("");
+  const [snackbarSeveridade, setSnackbarSeveridade] = useState("success");
 
 
   useEffect(() => {
@@ -248,35 +252,39 @@ export default function Reservas() {
         ativo,
       };
 
-      console.log("Dados enviados:", dados);
-
       if (reservaEditando) {
         await editarReserva(
           reservaEditando.id,
           dados
         );
+
+        fecharFormulario();
+        await carregarReservas();
+
+        mostrarSnackbar(
+          "Reserva atualizada com sucesso!"
+        );
       } else {
         await criarReserva(dados);
+
+        fecharFormulario();
+        await carregarReservas();
+
+        mostrarSnackbar(
+          "Reserva criada com sucesso!"
+        );
       }
-
-      fecharFormulario();
-
-      await carregarReservas();
     } catch (error) {
       console.error(error);
-      setErro(error.message);
 
-      const mensagemApi =
-        error?.response?.data?.message ||
-        error?.response?.data?.title;
-
-      setErro(
-        mensagemApi ||
+      mostrarSnackbar(
+        error.message ||
         (
           reservaEditando
             ? "Não foi possível editar a reserva."
             : "Não foi possível criar a reserva."
-        )
+        ),
+        "error"
       );
     } finally {
       setSalvando(false);
@@ -312,9 +320,19 @@ export default function Reservas() {
 
       setConfirmacaoAberta(false);
       setReservaStatusPendente(null);
+
+      mostrarSnackbar(
+        novoAtivo
+          ? "Reserva ativada com sucesso!"
+          : "Reserva desativada com sucesso!"
+      );
     } catch (error) {
       console.error(error);
-      setErro(error.message);
+
+      mostrarSnackbar(
+        error.message,
+        "error"
+      );
     } finally {
       setAlterandoStatus(false);
     }
@@ -323,6 +341,19 @@ export default function Reservas() {
   function abrirConfirmacaoStatus(reserva) {
     setReservaStatusPendente(reserva);
     setConfirmacaoAberta(true);
+  }
+
+  function mostrarSnackbar(
+    mensagem,
+    severidade = "success"
+  ) {
+    setSnackbarMensagem(mensagem);
+    setSnackbarSeveridade(severidade);
+    setSnackbarAberto(true);
+  }
+
+  function fecharSnackbar() {
+    setSnackbarAberto(false);
   }
 
   return (
@@ -581,6 +612,12 @@ export default function Reservas() {
         }}
         onConfirm={alterarStatus}
         loading={alterandoStatus}
+      />
+      <AppSnackbar
+        open={snackbarAberto}
+        message={snackbarMensagem}
+        severity={snackbarSeveridade}
+        onClose={fecharSnackbar}
       />
     </Box>
   );

@@ -1,34 +1,28 @@
 import { useEffect, useState } from "react";
-
 import {
   Box,
   Button,
   TextField,
   Typography,
 } from "@mui/material";
-
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
-
 import {
   buscarUsuarios,
   criarUsuario,
   editarUsuario,
   alterarStatusUsuario,
 } from "../../services/api";
-
 import PageTable from "../../components/PageTable";
 import FormDialog from "../../components/FormDialog";
-
 import {
   validarCampo,
   required,
   email,
   minLength,
 } from "../../utils/validation";
-
 import StatusSwitch from "../../components/StatusSwitch";
-
 import ConfirmDialog from "../../components/ConfirmDialog";
+import AppSnackbar from "../../components/AppSnackbar";
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
@@ -43,6 +37,9 @@ export default function Usuarios() {
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
   const [usuarioStatusPendente, setUsuarioStatusPendente] = useState(null);
   const [alterandoStatus, setAlterandoStatus] = useState(false);
+  const [snackbarAberto, setSnackbarAberto] = useState(false);
+  const [snackbarMensagem, setSnackbarMensagem] = useState("");
+  const [snackbarSeveridade, setSnackbarSeveridade] = useState("success");
 
   useEffect(() => {
     carregarUsuarios();
@@ -158,13 +155,25 @@ export default function Usuarios() {
 
       if (usuarioEditando) {
         await editarUsuario(usuarioEditando.id, usuario);
+
+        fecharFormulario();
+
+        await carregarUsuarios();
+
+        mostrarSnackbar(
+          "Usuário atualizado com sucesso!"
+        );
       } else {
         await criarUsuario(usuario);
+
+        fecharFormulario();
+
+        await carregarUsuarios();
+
+        mostrarSnackbar(
+          "Usuário criado com sucesso!"
+        );
       }
-
-      fecharFormulario();
-
-      await carregarUsuarios();
     } catch (error) {
       console.error(error);
       setErro(error.message);
@@ -176,6 +185,16 @@ export default function Usuarios() {
   function abrirConfirmacaoStatus(usuario) {
     setUsuarioStatusPendente(usuario);
     setConfirmacaoAberta(true);
+  }
+
+  function mostrarSnackbar(mensagem, severidade = "success") {
+    setSnackbarMensagem(mensagem);
+    setSnackbarSeveridade(severidade);
+    setSnackbarAberto(true);
+  }
+
+  function fecharSnackbar() {
+    setSnackbarAberto(false);
   }
 
   async function alterarStatus() {
@@ -207,6 +226,12 @@ export default function Usuarios() {
 
       setConfirmacaoAberta(false);
       setUsuarioStatusPendente(null);
+
+      mostrarSnackbar(
+        novoAtivo
+          ? "Usuário ativado com sucesso!"
+          : "Usuário desativado com sucesso!"
+      );
     } catch (error) {
       console.error(error);
       setErro(error.message);
@@ -377,6 +402,12 @@ export default function Usuarios() {
         }}
         onConfirm={alterarStatus}
         loading={alterandoStatus}
+      />
+      <AppSnackbar
+        open={snackbarAberto}
+        message={snackbarMensagem}
+        severity={snackbarSeveridade}
+        onClose={fecharSnackbar}
       />
     </Box>
   );
