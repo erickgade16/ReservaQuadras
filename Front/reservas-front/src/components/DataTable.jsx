@@ -7,6 +7,7 @@ import {
   TableHead,
   TableRow,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 
 export default function DataTable({
@@ -54,7 +55,13 @@ export default function DataTable({
                 align="center"
                 sx={{ py: 5 }}
               >
-                Carregando...
+                <CircularProgress
+                  size={28}
+                  thickness={4}
+                  sx={{
+                    color: "#198754",
+                  }}
+                />
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (

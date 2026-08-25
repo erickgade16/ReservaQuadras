@@ -130,6 +130,11 @@ export default function Usuarios() {
   }
 
   async function salvarUsuario() {
+
+    if (salvando) {
+      return;
+    }
+
     const erroValidacao = validarFormulario();
 
     if (erroValidacao) {
@@ -245,7 +250,13 @@ export default function Usuarios() {
             render: (usuario) => (
               <StatusSwitch
                 checked={usuario.ativo}
-                onChange={() => abrirConfirmacaoStatus(usuario)}
+                disabled={
+                  alterandoStatus &&
+                  usuarioStatusPendente?.id === usuario.id
+                }
+                onChange={() =>
+                  abrirConfirmacaoStatus(usuario)
+                }
               />
             ),
           },

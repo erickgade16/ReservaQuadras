@@ -137,7 +137,12 @@ export default function Quadras() {
   }
 
   async function salvarQuadra() {
+
     const erroValidacao = validarFormulario();
+
+    if (salvando) {
+      return;
+    }
 
     if (erroValidacao) {
       setErro(erroValidacao);
@@ -264,7 +269,13 @@ export default function Quadras() {
             render: (quadra) => (
               <StatusSwitch
                 checked={quadra.ativa}
-                onChange={() => abrirConfirmacaoStatus(quadra)}
+                disabled={
+                  alterandoStatus &&
+                  quadraStatusPendente?.id === quadra.id
+                }
+                onChange={() =>
+                  abrirConfirmacaoStatus(quadra)
+                }
               />
             ),
           },

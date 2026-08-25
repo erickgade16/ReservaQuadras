@@ -206,6 +206,10 @@ export default function Reservas() {
   }
 
   async function salvarReserva() {
+
+    if (salvando) {
+      return;
+    }
     const erroValidacao = validarFormulario();
 
     const quadraSelecionada = quadras.find(
@@ -292,7 +296,7 @@ export default function Reservas() {
 
       await alterarStatusReserva(
         reservaStatusPendente.id,
-        novoAtivo 
+        novoAtivo
       );
 
       setReservas((reservasAtuais) =>
@@ -383,6 +387,10 @@ export default function Reservas() {
             render: (reserva) => (
               <StatusSwitch
                 checked={Boolean(reserva.ativo)}
+                disabled={
+                  alterandoStatus &&
+                  reservaStatusPendente?.id === reserva.id
+                }
                 onChange={() =>
                   abrirConfirmacaoStatus(reserva)
                 }
