@@ -11,7 +11,7 @@ export default function PageTable({
   columns,
   rows,
   loading = false,
-  emptyMessage,
+  emptyMessage = "Nenhum registro encontrado.",
 }) {
   return (
     <Paper

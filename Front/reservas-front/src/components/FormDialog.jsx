@@ -18,7 +18,7 @@ export default function FormDialog({
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={loading ? undefined : onClose}
       fullWidth
       maxWidth="sm"
     >
@@ -32,7 +32,11 @@ export default function FormDialog({
         {title}
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 3 }}>
+      <DialogContent
+        sx={{
+          pt: 3,
+        }}
+      >
         {children}
       </DialogContent>
 
@@ -41,6 +45,7 @@ export default function FormDialog({
           px: 3,
           py: 2,
           borderTop: "1px solid #e2e8e4",
+          gap: 1,
         }}
       >
         <Button

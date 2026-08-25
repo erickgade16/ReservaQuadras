@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Switch,
   TextField,
   Typography,
 } from "@mui/material";
@@ -42,8 +41,8 @@ export default function Usuarios() {
   const [emailUsuario, setEmailUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
-const [usuarioStatusPendente, setUsuarioStatusPendente] = useState(null);
-const [alterandoStatus, setAlterandoStatus] = useState(false);
+  const [usuarioStatusPendente, setUsuarioStatusPendente] = useState(null);
+  const [alterandoStatus, setAlterandoStatus] = useState(false);
 
   useEffect(() => {
     carregarUsuarios();
@@ -65,8 +64,8 @@ const [alterandoStatus, setAlterandoStatus] = useState(false);
         setUsuarios([]);
       }
     } catch (error) {
-  console.error(error);
-  setErro(error.message);
+      console.error(error);
+      setErro(error.message);
       setUsuarios([]);
     } finally {
       setCarregando(false);
@@ -119,12 +118,12 @@ const [alterandoStatus, setAlterandoStatus] = useState(false);
       senha: usuarioEditando
         ? null
         : validarCampo(senha, [
-            required("Informe a senha."),
-            minLength(
-              6,
-              "A senha deve ter pelo menos 6 caracteres."
-            ),
-          ]),
+          required("Informe a senha."),
+          minLength(
+            6,
+            "A senha deve ter pelo menos 6 caracteres."
+          ),
+        ]),
     };
 
     return Object.values(erros).find(Boolean) || null;
@@ -162,54 +161,54 @@ const [alterandoStatus, setAlterandoStatus] = useState(false);
 
       await carregarUsuarios();
     } catch (error) {
-  console.error(error);
-  setErro(error.message);
+      console.error(error);
+      setErro(error.message);
     } finally {
       setSalvando(false);
     }
   }
 
   function abrirConfirmacaoStatus(usuario) {
-  setUsuarioStatusPendente(usuario);
-  setConfirmacaoAberta(true);
-}
-
- async function alterarStatus() {
-  if (!usuarioStatusPendente) {
-    return;
+    setUsuarioStatusPendente(usuario);
+    setConfirmacaoAberta(true);
   }
 
-  const novoAtivo = !usuarioStatusPendente.ativo;
+  async function alterarStatus() {
+    if (!usuarioStatusPendente) {
+      return;
+    }
 
-  try {
-    setAlterandoStatus(true);
-    setErro("");
+    const novoAtivo = !usuarioStatusPendente.ativo;
 
-    await alterarStatusUsuario(
-      usuarioStatusPendente.id,
-      novoAtivo
-    );
+    try {
+      setAlterandoStatus(true);
+      setErro("");
 
-    setUsuarios((usuariosAtuais) =>
-      usuariosAtuais.map((item) =>
-        item.id === usuarioStatusPendente.id
-          ? {
+      await alterarStatusUsuario(
+        usuarioStatusPendente.id,
+        novoAtivo
+      );
+
+      setUsuarios((usuariosAtuais) =>
+        usuariosAtuais.map((item) =>
+          item.id === usuarioStatusPendente.id
+            ? {
               ...item,
               ativo: novoAtivo,
             }
-          : item
-      )
-    );
+            : item
+        )
+      );
 
-    setConfirmacaoAberta(false);
-    setUsuarioStatusPendente(null);
-  } catch (error) {
-    console.error(error);
-    setErro(error.message);
-  } finally {
-    setAlterandoStatus(false);
+      setConfirmacaoAberta(false);
+      setUsuarioStatusPendente(null);
+    } catch (error) {
+      console.error(error);
+      setErro(error.message);
+    } finally {
+      setAlterandoStatus(false);
+    }
   }
-}
 
   return (
     <Box>
@@ -235,21 +234,21 @@ const [alterandoStatus, setAlterandoStatus] = useState(false);
             render: (usuario) =>
               usuario.dataCadastro
                 ? new Date(
-                    usuario.dataCadastro
-                  ).toLocaleDateString("pt-BR")
+                  usuario.dataCadastro
+                ).toLocaleDateString("pt-BR")
                 : "-",
           },
 
           {
-  field: "ativo",
-  label: "Status",
-  render: (usuario) => (
-    <StatusSwitch
-      checked={usuario.ativo}
-      onChange={() => abrirConfirmacaoStatus(usuario)}
-    />
-  ),
-},
+            field: "ativo",
+            label: "Status",
+            render: (usuario) => (
+              <StatusSwitch
+                checked={usuario.ativo}
+                onChange={() => abrirConfirmacaoStatus(usuario)}
+              />
+            ),
+          },
 
           {
             field: "acoes",
@@ -348,26 +347,26 @@ const [alterandoStatus, setAlterandoStatus] = useState(false);
         </Box>
       </FormDialog>
       <ConfirmDialog
-  open={confirmacaoAberta}
-  title={
-    usuarioStatusPendente?.ativo
-      ? "Desativar usuário"
-      : "Ativar usuário"
-  }
-  message={
-    usuarioStatusPendente?.ativo
-      ? "Tem certeza que deseja desativar este usuário?"
-      : "Tem certeza que deseja ativar este usuário?"
-  }
-  onClose={() => {
-    if (!alterandoStatus) {
-      setConfirmacaoAberta(false);
-      setUsuarioStatusPendente(null);
-    }
-  }}
-  onConfirm={alterarStatus}
-  loading={alterandoStatus}
-/>
+        open={confirmacaoAberta}
+        title={
+          usuarioStatusPendente?.ativo
+            ? "Desativar usuário"
+            : "Ativar usuário"
+        }
+        message={
+          usuarioStatusPendente?.ativo
+            ? "Tem certeza que deseja desativar este usuário?"
+            : "Tem certeza que deseja ativar este usuário?"
+        }
+        onClose={() => {
+          if (!alterandoStatus) {
+            setConfirmacaoAberta(false);
+            setUsuarioStatusPendente(null);
+          }
+        }}
+        onConfirm={alterarStatus}
+        loading={alterandoStatus}
+      />
     </Box>
   );
 }

@@ -208,11 +208,6 @@ export default function Reservas() {
   async function salvarReserva() {
     const erroValidacao = validarFormulario();
 
-    if (erroValidacao) {
-      setErro(erroValidacao);
-      return;
-    }
-
     const quadraSelecionada = quadras.find(
       (quadra) => quadra.id === Number(quadraId)
     );
@@ -223,20 +218,12 @@ export default function Reservas() {
     }
 
     if (!quadraSelecionada.ativo) {
-      setErro("A quadra selecionada está inativo.");
+      setErro("A quadra selecionada está inativa.");
       return;
     }
 
     if (erroValidacao) {
       setErro(erroValidacao);
-      return;
-    }
-
-
-    if (horaFim <= horaInicio) {
-      setErro(
-        "O horário de fim deve ser maior que o horário de início."
-      );
       return;
     }
 
@@ -297,7 +284,7 @@ export default function Reservas() {
       return;
     }
 
-    const novaativo = !reservaStatusPendente.ativo;
+    const novoAtivo = !reservaStatusPendente.ativo;
 
     try {
       setAlterandoStatus(true);
@@ -305,7 +292,7 @@ export default function Reservas() {
 
       await alterarStatusReserva(
         reservaStatusPendente.id,
-        novaativo
+        novoAtivo 
       );
 
       setReservas((reservasAtuais) =>
@@ -313,7 +300,7 @@ export default function Reservas() {
           item.id === reservaStatusPendente.id
             ? {
               ...item,
-              ativo: novaativo,
+              ativo: novoAtivo,
             }
             : item
         )

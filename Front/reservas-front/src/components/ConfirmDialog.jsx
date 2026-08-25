@@ -8,7 +8,6 @@ import {
   Box,
 } from "@mui/material";
 
-import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 
 export default function ConfirmDialog({
   open,

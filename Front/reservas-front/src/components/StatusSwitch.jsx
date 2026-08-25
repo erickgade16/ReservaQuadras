@@ -4,6 +4,8 @@ export default function StatusSwitch({
   checked,
   onChange,
   disabled = false,
+  labelAtivo = "Ativo",
+  labelInativo = "Inativo",
 }) {
   return (
     <Box
@@ -63,7 +65,7 @@ export default function StatusSwitch({
           transition: "color 200ms ease",
         }}
       >
-        {checked ? "Ativo" : "Inativo"}
+        {checked ? labelAtivo : labelInativo}
       </Typography>
     </Box>
   );
