@@ -225,7 +225,7 @@ export default function Reservas() {
       return;
     }
 
-    if (!quadraSelecionada.ativo) {
+    if (!quadraSelecionada.ativa) {
       setErro("A quadra selecionada está inativa.");
       return;
     }
@@ -510,7 +510,7 @@ export default function Reservas() {
             required
           >
             {quadras
-              .filter((quadra) => quadra.ativo)
+              .filter((quadra) => quadra.ativa)
               .map((quadra) => (
                 <MenuItem
                   key={quadra.id}
