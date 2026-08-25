@@ -30,6 +30,7 @@ import {
   dataFutura,
   horarioDentroDoFuncionamento,
 } from "../../utils/validation";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
@@ -48,7 +49,10 @@ export default function Reservas() {
   const [dataReserva, setDataReserva] = useState("");
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFim, setHoraFim] = useState("");
-const [ativo, setAtivo] = useState(true);
+  const [ativo, setAtivo] = useState(true);
+  const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
+  const [reservaStatusPendente, setReservaStatusPendente] = useState(null);
+  const [alterandoStatus, setAlterandoStatus] = useState(false);
 
 
   useEffect(() => {
@@ -63,12 +67,12 @@ const [ativo, setAtivo] = useState(true);
 
       const dados = await buscarReservas();
 
-      
+
 
       setReservas(dados);
     } catch (error) {
-  console.error(error);
-  setErro(error.message);
+      console.error(error);
+      setErro(error.message);
     } finally {
       setCarregando(false);
     }
@@ -84,8 +88,8 @@ const [ativo, setAtivo] = useState(true);
       setUsuarios(usuariosData);
       setQuadras(quadrasData);
     } catch (error) {
-  console.error(error);
-  setErro(error.message);
+      console.error(error);
+      setErro(error.message);
     }
   }
 
@@ -149,9 +153,9 @@ const [ativo, setAtivo] = useState(true);
 
   function validarFormulario() {
 
-const quadraSelecionada = quadras.find(
-  (quadra) => quadra.id === Number(quadraId)
-);
+    const quadraSelecionada = quadras.find(
+      (quadra) => quadra.id === Number(quadraId)
+    );
 
     const erros = {
       usuarioId: validarCampo(usuarioId, [
@@ -163,65 +167,65 @@ const quadraSelecionada = quadras.find(
       ]),
 
       dataReserva: validarCampo(dataReserva, [
-  required("Informe a data da reserva."),
-  () =>
-    dataFutura(
-      dataReserva,
-      "A data da reserva não pode ser anterior a hoje."
-    ),
-]),
+        required("Informe a data da reserva."),
+        () =>
+          dataFutura(
+            dataReserva,
+            "A data da reserva não pode ser anterior a hoje."
+          ),
+      ]),
 
       horaInicio: validarCampo(horaInicio, [
         required("Informe o horário de início."),
       ]),
 
       horaFim: validarCampo(horaFim, [
-  required("Informe o horário de fim."),
+        required("Informe o horário de fim."),
 
-  () =>
-    horaMaiorQue(
-      horaInicio,
-      horaFim,
-      "O horário de fim deve ser maior que o horário de início."
-    ),
+        () =>
+          horaMaiorQue(
+            horaInicio,
+            horaFim,
+            "O horário de fim deve ser maior que o horário de início."
+          ),
 
-  () =>
-    horarioDentroDoFuncionamento(
-      horaInicio,
-      horaFim,
-      quadraSelecionada?.horaAbertura,
-      quadraSelecionada?.horaFechamento,
-      `A reserva deve estar entre ${quadraSelecionada?.horaAbertura} e ${quadraSelecionada?.horaFechamento}.`
-    ),
-]),
+        () =>
+          horarioDentroDoFuncionamento(
+            horaInicio,
+            horaFim,
+            quadraSelecionada?.horaAbertura,
+            quadraSelecionada?.horaFechamento,
+            `A reserva deve estar entre ${quadraSelecionada?.horaAbertura} e ${quadraSelecionada?.horaFechamento}.`
+          ),
+      ]),
 
-    
+
     };
 
     return Object.values(erros).find(Boolean) || null;
   }
 
   async function salvarReserva() {
-  const erroValidacao = validarFormulario();
+    const erroValidacao = validarFormulario();
 
-  if (erroValidacao) {
-    setErro(erroValidacao);
-    return;
-  }
+    if (erroValidacao) {
+      setErro(erroValidacao);
+      return;
+    }
 
-  const quadraSelecionada = quadras.find(
-    (quadra) => quadra.id === Number(quadraId)
-  );
+    const quadraSelecionada = quadras.find(
+      (quadra) => quadra.id === Number(quadraId)
+    );
 
-  if (!quadraSelecionada) {
-    setErro("Quadra não encontrada.");
-    return;
-  }
+    if (!quadraSelecionada) {
+      setErro("Quadra não encontrada.");
+      return;
+    }
 
-  if (!quadraSelecionada.ativa) {
-    setErro("A quadra selecionada está inativa.");
-    return;
-  }
+    if (!quadraSelecionada.ativo) {
+      setErro("A quadra selecionada está inativo.");
+      return;
+    }
 
     if (erroValidacao) {
       setErro(erroValidacao);
@@ -241,17 +245,17 @@ const quadraSelecionada = quadras.find(
       setErro("");
 
       const dados = {
-  ...(reservaEditando?.id && {
-    id: reservaEditando.id,
-  }),
+        ...(reservaEditando?.id && {
+          id: reservaEditando.id,
+        }),
 
-  usuarioId: Number(usuarioId),
-  quadraId: Number(quadraId),
-  dataReserva,
-  horaInicio: `${horaInicio}:00`,
-  horaFim: `${horaFim}:00`,
-  ativo,
-};
+        usuarioId: Number(usuarioId),
+        quadraId: Number(quadraId),
+        dataReserva,
+        horaInicio: `${horaInicio}:00`,
+        horaFim: `${horaFim}:00`,
+        ativo,
+      };
 
       console.log("Dados enviados:", dados);
 
@@ -268,8 +272,8 @@ const quadraSelecionada = quadras.find(
 
       await carregarReservas();
     } catch (error) {
-  console.error(error);
-  setErro(error.message);
+      console.error(error);
+      setErro(error.message);
 
       const mensagemApi =
         error?.response?.data?.message ||
@@ -277,43 +281,58 @@ const quadraSelecionada = quadras.find(
 
       setErro(
         mensagemApi ||
-          (
-            reservaEditando
-              ? "Não foi possível editar a reserva."
-              : "Não foi possível criar a reserva."
-          )
+        (
+          reservaEditando
+            ? "Não foi possível editar a reserva."
+            : "Não foi possível criar a reserva."
+        )
       );
     } finally {
       setSalvando(false);
     }
   }
 
-  async function alterarStatus(reserva) {
-  const novoAtivo = !reserva.ativo;
+  async function alterarStatus() {
+    if (!reservaStatusPendente) {
+      return;
+    }
 
-  try {
-    setErro("");
+    const novaativo = !reservaStatusPendente.ativo;
 
-    await alterarStatusReserva(
-      reserva.id,
-      novoAtivo
-    );
+    try {
+      setAlterandoStatus(true);
+      setErro("");
 
-    setReservas((reservasAtuais) =>
-      reservasAtuais.map((item) =>
-        item.id === reserva.id
-          ? {
+      await alterarStatusReserva(
+        reservaStatusPendente.id,
+        novaativo
+      );
+
+      setReservas((reservasAtuais) =>
+        reservasAtuais.map((item) =>
+          item.id === reservaStatusPendente.id
+            ? {
               ...item,
-              ativo: novoAtivo,
+              ativo: novaativo,
             }
-          : item
-      )
-    );
-  } catch (error) {
-  console.error(error);
-  setErro(error.message);
+            : item
+        )
+      );
+
+      setConfirmacaoAberta(false);
+      setReservaStatusPendente(null);
+    } catch (error) {
+      console.error(error);
+      setErro(error.message);
+    } finally {
+      setAlterandoStatus(false);
+    }
   }
-}
+
+  function abrirConfirmacaoStatus(reserva) {
+    setReservaStatusPendente(reserva);
+    setConfirmacaoAberta(true);
+  }
 
   return (
     <Box>
@@ -376,11 +395,11 @@ const quadraSelecionada = quadras.find(
             label: "Status",
             render: (reserva) => (
               <StatusSwitch
-  checked={Boolean(reserva.ativo)}
-  onChange={() =>
-    alterarStatus(reserva)
-  }
-/>
+                checked={Boolean(reserva.ativo)}
+                onChange={() =>
+                  abrirConfirmacaoStatus(reserva)
+                }
+              />
             ),
           },
 
@@ -465,7 +484,7 @@ const quadraSelecionada = quadras.find(
             required
           >
             {quadras
-              .filter((quadra) => quadra.ativa)
+              .filter((quadra) => quadra.ativo)
               .map((quadra) => (
                 <MenuItem
                   key={quadra.id}
@@ -547,6 +566,27 @@ const quadraSelecionada = quadras.find(
           )}
         </Box>
       </FormDialog>
+      <ConfirmDialog
+        open={confirmacaoAberta}
+        title={
+          reservaStatusPendente?.ativo
+            ? "Desativar reserva"
+            : "Ativar reserva"
+        }
+        message={
+          reservaStatusPendente?.ativo
+            ? "Tem certeza que deseja desativar esta reserva?"
+            : "Tem certeza que deseja ativar esta reserva?"
+        }
+        onClose={() => {
+          if (!alterandoStatus) {
+            setConfirmacaoAberta(false);
+            setReservaStatusPendente(null);
+          }
+        }}
+        onConfirm={alterarStatus}
+        loading={alterandoStatus}
+      />
     </Box>
   );
 }

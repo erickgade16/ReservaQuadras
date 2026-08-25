@@ -29,6 +29,8 @@ import {
 
 import StatusSwitch from "../../components/StatusSwitch";
 
+import ConfirmDialog from "../../components/ConfirmDialog";
+
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -39,6 +41,9 @@ export default function Usuarios() {
   const [nome, setNome] = useState("");
   const [emailUsuario, setEmailUsuario] = useState("");
   const [senha, setSenha] = useState("");
+  const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
+const [usuarioStatusPendente, setUsuarioStatusPendente] = useState(null);
+const [alterandoStatus, setAlterandoStatus] = useState(false);
 
   useEffect(() => {
     carregarUsuarios();
@@ -164,20 +169,30 @@ export default function Usuarios() {
     }
   }
 
- async function alterarStatus(usuario) {
-  const novoAtivo = !usuario.ativo;
+  function abrirConfirmacaoStatus(usuario) {
+  setUsuarioStatusPendente(usuario);
+  setConfirmacaoAberta(true);
+}
+
+ async function alterarStatus() {
+  if (!usuarioStatusPendente) {
+    return;
+  }
+
+  const novoAtivo = !usuarioStatusPendente.ativo;
 
   try {
+    setAlterandoStatus(true);
     setErro("");
 
     await alterarStatusUsuario(
-      usuario.id,
+      usuarioStatusPendente.id,
       novoAtivo
     );
 
     setUsuarios((usuariosAtuais) =>
       usuariosAtuais.map((item) =>
-        item.id === usuario.id
+        item.id === usuarioStatusPendente.id
           ? {
               ...item,
               ativo: novoAtivo,
@@ -185,9 +200,14 @@ export default function Usuarios() {
           : item
       )
     );
+
+    setConfirmacaoAberta(false);
+    setUsuarioStatusPendente(null);
   } catch (error) {
-  console.error(error);
-  setErro(error.message);
+    console.error(error);
+    setErro(error.message);
+  } finally {
+    setAlterandoStatus(false);
   }
 }
 
@@ -226,7 +246,7 @@ export default function Usuarios() {
   render: (usuario) => (
     <StatusSwitch
       checked={usuario.ativo}
-      onChange={() => alterarStatus(usuario)}
+      onChange={() => abrirConfirmacaoStatus(usuario)}
     />
   ),
 },
@@ -327,6 +347,27 @@ export default function Usuarios() {
           )}
         </Box>
       </FormDialog>
+      <ConfirmDialog
+  open={confirmacaoAberta}
+  title={
+    usuarioStatusPendente?.ativo
+      ? "Desativar usuário"
+      : "Ativar usuário"
+  }
+  message={
+    usuarioStatusPendente?.ativo
+      ? "Tem certeza que deseja desativar este usuário?"
+      : "Tem certeza que deseja ativar este usuário?"
+  }
+  onClose={() => {
+    if (!alterandoStatus) {
+      setConfirmacaoAberta(false);
+      setUsuarioStatusPendente(null);
+    }
+  }}
+  onConfirm={alterarStatus}
+  loading={alterandoStatus}
+/>
     </Box>
   );
 }

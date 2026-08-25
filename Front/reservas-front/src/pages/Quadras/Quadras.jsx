@@ -27,6 +27,7 @@ import {
   positive,
   horaMaiorQue,
 } from "../../utils/validation";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 export default function Quadras() {
   const [quadras, setQuadras] = useState([]);
@@ -41,6 +42,9 @@ export default function Quadras() {
   const [horaAbertura, setHoraAbertura] = useState("");
   const [horaFechamento, setHoraFechamento] = useState("");
   const [ativa, setAtiva] = useState(true);
+  const [alterandoStatus, setAlterandoStatus] = useState(false);
+  const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
+  const [quadraStatusPendente, setQuadraStatusPendente] = useState(null);
 
   useEffect(() => {
     carregarQuadras();
@@ -55,8 +59,8 @@ export default function Quadras() {
 
       setQuadras(dados);
     } catch (error) {
-  console.error(error);
-  setErro(error.message);
+      console.error(error);
+      setErro(error.message);
     } finally {
       setCarregando(false);
     }
@@ -119,15 +123,15 @@ export default function Quadras() {
       ]),
 
       horaFechamento: validarCampo(horaFechamento, [
-      required("Informe o horário de fechamento."),
-      () =>
-        horaMaiorQue(
-          horaAbertura,
-          horaFechamento,
-          "O horário de fechamento deve ser maior que o horário de abertura."
-        ),
-    ]),
-  };
+        required("Informe o horário de fechamento."),
+        () =>
+          horaMaiorQue(
+            horaAbertura,
+            horaFechamento,
+            "O horário de fechamento deve ser maior que o horário de abertura."
+          ),
+      ]),
+    };
 
     return Object.values(erros).find(Boolean) || null;
   }
@@ -170,34 +174,54 @@ export default function Quadras() {
       fecharFormulario();
       await carregarQuadras();
     } catch (error) {
-  console.error(error);
-  setErro(error.message);
+      console.error(error);
+      setErro(error.message);
     } finally {
       setSalvando(false);
     }
   }
 
-  async function alterarStatus(quadra) {
-  const novaAtiva = !quadra.ativa;
+  async function alterarStatus() {
+    if (!quadraStatusPendente) {
+      return;
+    }
 
-  try {
-    await alterarStatusQuadra(
-      quadra.id,
-      novaAtiva
-    );
+    const novaAtiva = !quadraStatusPendente.ativa;
 
-    setQuadras((quadrasAtuais) =>
-      quadrasAtuais.map((item) =>
-        item.id === quadra.id
-          ? { ...item, ativa: novaAtiva }
-          : item
-      )
-    );
-  } catch (error) {
-  console.error(error);
-  setErro(error.message);
+    try {
+      setAlterandoStatus(true);
+      setErro("");
+
+      await alterarStatusQuadra(
+        quadraStatusPendente.id,
+        novaAtiva
+      );
+
+      setQuadras((quadrasAtuais) =>
+        quadrasAtuais.map((item) =>
+          item.id === quadraStatusPendente.id
+            ? {
+              ...item,
+              ativa: novaAtiva,
+            }
+            : item
+        )
+      );
+
+      setConfirmacaoAberta(false);
+      setQuadraStatusPendente(null);
+    } catch (error) {
+      console.error(error);
+      setErro(error.message);
+    } finally {
+      setAlterandoStatus(false);
+    }
   }
-}
+
+  function abrirConfirmacaoStatus(quadra) {
+    setQuadraStatusPendente(quadra);
+    setConfirmacaoAberta(true);
+  }
 
   return (
     <Box>
@@ -235,15 +259,15 @@ export default function Quadras() {
           },
 
           {
-  field: "ativa",
-  label: "Status",
-  render: (quadra) => (
-    <StatusSwitch
-      checked={quadra.ativa}
-      onChange={() => alterarStatus(quadra)}
-    />
-  ),
-},
+            field: "ativa",
+            label: "Status",
+            render: (quadra) => (
+              <StatusSwitch
+                checked={quadra.ativa}
+                onChange={() => abrirConfirmacaoStatus(quadra)}
+              />
+            ),
+          },
 
           {
             field: "acoes",
@@ -387,6 +411,27 @@ export default function Quadras() {
           )}
         </Box>
       </FormDialog>
+      <ConfirmDialog
+        open={confirmacaoAberta}
+        title={
+          quadraStatusPendente?.ativa
+            ? "Desativar quadra"
+            : "Ativar quadra"
+        }
+        message={
+          quadraStatusPendente?.ativa
+            ? `Tem certeza que deseja desativar a quadra "${quadraStatusPendente?.nome}"?`
+            : `Tem certeza que deseja ativar a quadra "${quadraStatusPendente?.nome}"?`
+        }
+        onClose={() => {
+          if (!alterandoStatus) {
+            setConfirmacaoAberta(false);
+            setQuadraStatusPendente(null);
+          }
+        }}
+        onConfirm={alterarStatus}
+        loading={alterandoStatus}
+      />
     </Box>
   );
 }
