@@ -488,14 +488,16 @@ export default function Reservas() {
             fullWidth
             required
           >
-            {usuarios.map((usuario) => (
-              <MenuItem
-                key={usuario.id}
-                value={usuario.id}
-              >
-                {usuario.nome}
-              </MenuItem>
-            ))}
+            {usuarios
+              .filter((usuario) => usuario.ativo)
+              .map((usuario) => (
+                <MenuItem
+                  key={usuario.id}
+                  value={usuario.id}
+                >
+                  {usuario.nome}
+                </MenuItem>
+              ))}
           </TextField>
 
           {/* QUADRA */}

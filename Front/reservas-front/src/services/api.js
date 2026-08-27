@@ -1,36 +1,42 @@
 const API_URL = "https://localhost:7127/api";
 
 async function tratarErroResponse(response, mensagemPadrao) {
-  let erro;
+  const texto = await response.text();
 
-  try {
-    erro = await response.json();
-  } catch {
+  if (!texto) {
     throw new Error(mensagemPadrao);
   }
 
-  // Erros de validação do ASP.NET
-  if (erro?.errors) {
-    const mensagens = Object.values(erro.errors).flat();
+  try {
+    const erro = JSON.parse(texto);
 
-    if (mensagens.length > 0) {
-      throw new Error(mensagens[0]);
+    if (erro?.errors) {
+      const mensagens = Object.values(erro.errors).flat();
+
+      if (mensagens.length > 0) {
+        throw new Error(mensagens[0]);
+      }
     }
-  }
 
-  // API retornando uma string diretamente
-  if (typeof erro === "string") {
-    throw new Error(erro);
-  }
+    if (typeof erro === "string") {
+      throw new Error(erro);
+    }
 
-  // API retornando { message: "..." }
-  if (erro?.message) {
-    throw new Error(erro.message);
-  }
+    if (erro?.message) {
+      throw new Error(erro.message);
+    }
 
-  // API retornando { title: "..." }
-  if (erro?.title) {
-    throw new Error(erro.title);
+    if (erro?.title) {
+      throw new Error(erro.title);
+    }
+  } catch (error) {
+    if (
+      error instanceof SyntaxError
+    ) {
+      throw new Error(texto);
+    }
+
+    throw error;
   }
 
   throw new Error(mensagemPadrao);
