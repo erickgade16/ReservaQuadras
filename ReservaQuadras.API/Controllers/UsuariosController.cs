@@ -16,14 +16,15 @@ namespace ReservaQuadras.API.Controllers
         private readonly IPasswordHasher<Entities.Usuario> _passwordHasher;
 
         public UsuariosController(
-    ReservaQuadrasContext context,
-    IPasswordHasher<Usuario> passwordHasher)
+        ReservaQuadrasContext context,
+        IPasswordHasher<Usuario> passwordHasher)
         {
             _context = context;
             _passwordHasher = passwordHasher;
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get()
         {
             var usuarios = await _context.Usuarios.ToListAsync();
@@ -52,6 +53,7 @@ namespace ReservaQuadras.API.Controllers
 
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Put(int id, Usuario usuario)
         {
 
@@ -77,6 +79,7 @@ namespace ReservaQuadras.API.Controllers
         }
 
         [HttpPatch("{id}/status")]
+        [Authorize]
         public async Task<IActionResult> AlterarStatus(int id, [FromBody] bool ativo)
         {
             var usuario = await _context.Usuarios.FindAsync(id);
