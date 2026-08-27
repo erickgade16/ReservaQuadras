@@ -4,6 +4,7 @@ using ReservaQuadras.API.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 namespace ReservaQuadras.API.Controllers;
 
@@ -13,24 +14,36 @@ public class AuthController : ControllerBase
 {
     private readonly ReservaQuadrasContext _context;
     private readonly IConfiguration _configuration;
+    private readonly IPasswordHasher<Entities.Usuario> _passwordHasher;
 
     public AuthController(
         ReservaQuadrasContext context,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IPasswordHasher<Entities.Usuario> passwordHasher)
     {
         _context = context;
         _configuration = configuration;
+        _passwordHasher = passwordHasher;
     }
 
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginRequest request)
     {
         var usuario = _context.Usuarios
-            .FirstOrDefault(u =>
-                u.Email == request.Email &&
-                u.Senha == request.Senha);
+    .FirstOrDefault(u => u.Email == request.Email);
 
         if (usuario == null)
+        {
+            return Unauthorized("E-mail ou senha inválidos.");
+        }
+
+        var resultado = _passwordHasher.VerifyHashedPassword(
+            usuario,
+            usuario.Senha!,
+            request.Senha
+        );
+
+        if (resultado == PasswordVerificationResult.Failed)
         {
             return Unauthorized("E-mail ou senha inválidos.");
         }

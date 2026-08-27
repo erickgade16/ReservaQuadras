@@ -7,31 +7,55 @@ import {
   Typography,
 } from "@mui/material";
 
-import { fazerLogin } from "../../services/api";
-import { useAuth } from "../../context/AuthContext";
+import { criarUsuario } from "../../services/api";
 
-export default function Login({ onCadastro }) {
-  const { login } = useAuth();
-
+export default function Cadastro({ onVoltar }) {
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+
   const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
   const [carregando, setCarregando] = useState(false);
 
-  async function handleLogin(event) {
+  async function handleCadastro(event) {
     event.preventDefault();
 
     if (carregando) {
       return;
     }
 
+    setErro("");
+    setSucesso("");
+
+    if (senha.length < 6) {
+      setErro("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    if (senha !== confirmarSenha) {
+      setErro("As senhas não são iguais.");
+      return;
+    }
+
     try {
       setCarregando(true);
-      setErro("");
 
-      const dados = await fazerLogin(email, senha);
+      await criarUsuario({
+        nome: nome.trim(),
+        email: email.trim(),
+        senha,
+        ativo: true,
+      });
 
-      login(dados.token, dados.usuario);
+      setSucesso("Conta criada com sucesso!");
+
+      setNome("");
+      setEmail("");
+      setSenha("");
+      setConfirmarSenha("");
+
     } catch (error) {
       console.error(error);
       setErro(error.message);
@@ -68,7 +92,7 @@ export default function Login({ onCadastro }) {
             mb: 1,
           }}
         >
-          Reserva Quadras
+          Criar conta
         </Typography>
 
         <Typography
@@ -77,18 +101,26 @@ export default function Login({ onCadastro }) {
             mb: 3,
           }}
         >
-          Entre com seus dados para continuar.
+          Preencha seus dados para criar sua conta.
         </Typography>
 
         <Box
           component="form"
-          onSubmit={handleLogin}
+          onSubmit={handleCadastro}
           sx={{
             display: "flex",
             flexDirection: "column",
             gap: 2,
           }}
         >
+          <TextField
+            label="Nome"
+            value={nome}
+            onChange={(event) => setNome(event.target.value)}
+            fullWidth
+            required
+          />
+
           <TextField
             label="E-mail"
             type="email"
@@ -107,11 +139,29 @@ export default function Login({ onCadastro }) {
             required
           />
 
+          <TextField
+            label="Confirmar senha"
+            type="password"
+            value={confirmarSenha}
+            onChange={(event) =>
+              setConfirmarSenha(event.target.value)
+            }
+            fullWidth
+            required
+          />
+
           {erro && (
             <Typography color="error">
               {erro}
             </Typography>
           )}
+
+          {sucesso && (
+            <Typography sx={{ color: "#198754" }}>
+              {sucesso}
+            </Typography>
+          )}
+
           <Button
             type="submit"
             variant="contained"
@@ -128,13 +178,13 @@ export default function Login({ onCadastro }) {
               },
             }}
           >
-            {carregando ? "Entrando..." : "Entrar"}
+            {carregando ? "Criando..." : "Criar conta"}
           </Button>
 
           <Button
             type="button"
             variant="text"
-            onClick={onCadastro}
+            onClick={onVoltar}
             disabled={carregando}
             sx={{
               textTransform: "none",
@@ -142,7 +192,7 @@ export default function Login({ onCadastro }) {
               fontWeight: 600,
             }}
           >
-            Criar nova conta
+            Voltar para o login
           </Button>
         </Box>
       </Paper>

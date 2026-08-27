@@ -7,18 +7,23 @@ import Usuarios from "./pages/Usuarios/Usuarios";
 import Reservas from "./pages/Reservas/Reservas";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login/Login";
+import Cadastro from "./pages/Cadastro/Cadastro";
 
 
 const drawerWidth = 240;
 
 function App() {
   const [paginaAtual, setPaginaAtual] = useState("Quadras");
-
+  const [telaLogin, setTelaLogin] = useState(true);
   const { autenticado } = useAuth();
 
   if (!autenticado) {
-    return <Login />;
-  }
+  return telaLogin ? (
+    <Login onCadastro={() => setTelaLogin(false)} />
+  ) : (
+    <Cadastro onVoltar={() => setTelaLogin(true)} />
+  );
+}
 
   const renderizarPagina = () => {
     switch (paginaAtual) {

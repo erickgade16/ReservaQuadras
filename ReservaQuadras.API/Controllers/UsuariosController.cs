@@ -3,20 +3,24 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ReservaQuadras.API.Data;
 using ReservaQuadras.API.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace ReservaQuadras.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class UsuariosController : Controller
     {
 
         private readonly ReservaQuadrasContext _context;
+        private readonly IPasswordHasher<Entities.Usuario> _passwordHasher;
 
-        public UsuariosController(ReservaQuadrasContext context)
+        public UsuariosController(
+    ReservaQuadrasContext context,
+    IPasswordHasher<Usuario> passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         [HttpGet]
@@ -30,6 +34,11 @@ namespace ReservaQuadras.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(Usuario usuario)
         {
+            usuario.Senha = _passwordHasher.HashPassword(
+                usuario,
+                usuario.Senha!
+            );
+
             _context.Usuarios.Add(usuario);
 
             await _context.SaveChangesAsync();
@@ -38,8 +47,7 @@ namespace ReservaQuadras.API.Controllers
                 nameof(Get),
                 new { id = usuario.Id },
                 usuario
-                );
-
+            );
         }
 
 
@@ -57,7 +65,10 @@ namespace ReservaQuadras.API.Controllers
 
             if (!string.IsNullOrWhiteSpace(usuario.Senha))
             {
-                usuarioExistente.Senha = usuario.Senha;
+                usuarioExistente.Senha = _passwordHasher.HashPassword(
+                    usuarioExistente,
+                    usuario.Senha
+                );
             }
 
             await _context.SaveChangesAsync();
