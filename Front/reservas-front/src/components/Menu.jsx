@@ -8,16 +8,20 @@ import {
   ListItemText,
   Typography,
   Avatar,
+  Button,
 } from "@mui/material";
 
 import SportsSoccerRoundedIcon from "@mui/icons-material/SportsSoccerRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import { useAuth } from "../context/AuthContext";
 
 const drawerWidth = 260;
 
 export default function Menu({ paginaAtual, setPaginaAtual }) {
+
+  const { logout, usuario } = useAuth();
   const opcoes = [
     {
       nome: "Quadras",
@@ -209,7 +213,7 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
                 fontWeight: 600,
               }}
             >
-              Usuário
+              {usuario?.nome || "Usuário"}
             </Typography>
 
             <Typography
@@ -222,6 +226,21 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
               Sistema
             </Typography>
           </Box>
+
+          <Button
+            onClick={logout}
+            sx={{
+              color: "#b4c8bb",
+              textTransform: "none",
+              minWidth: "auto",
+              "&:hover": {
+                color: "#fff",
+                backgroundColor: "#1b4d34",
+              },
+            }}
+          >
+            Logout
+          </Button>
         </Box>
       </Box>
     </Drawer>

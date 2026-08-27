@@ -2,11 +2,13 @@
 using Microsoft.EntityFrameworkCore;
 using ReservaQuadras.API.Data;
 using ReservaQuadras.API.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ReservaQuadras.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class QuadrasController : Controller
     {
         private readonly ReservaQuadrasContext _context;

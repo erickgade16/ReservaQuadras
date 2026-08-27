@@ -1,5 +1,16 @@
 const API_URL = "https://localhost:7127/api";
 
+function obterHeaders() {
+  const token = localStorage.getItem("token");
+
+  return {
+    "Content-Type": "application/json",
+    ...(token && {
+      Authorization: `Bearer ${token}`,
+    }),
+  };
+}
+
 async function tratarErroResponse(response, mensagemPadrao) {
   const texto = await response.text();
 
@@ -47,7 +58,9 @@ async function tratarErroResponse(response, mensagemPadrao) {
 // =========================
 
 export async function buscarQuadras() {
-  const response = await fetch(`${API_URL}/Quadras`);
+  const response = await fetch(`${API_URL}/Quadras`, {
+    headers: obterHeaders(),
+  });
 
   if (!response.ok) {
     await tratarErroResponse(
@@ -62,9 +75,7 @@ export async function buscarQuadras() {
 export async function criarQuadra(quadra) {
   const response = await fetch(`${API_URL}/Quadras`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: obterHeaders(),
     body: JSON.stringify(quadra),
   });
 
@@ -81,9 +92,7 @@ export async function criarQuadra(quadra) {
 export async function editarQuadra(id, quadra) {
   const response = await fetch(`${API_URL}/Quadras/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: obterHeaders(),
     body: JSON.stringify(quadra),
   });
 
@@ -102,9 +111,7 @@ export async function alterarStatusQuadra(id, ativa) {
     `${API_URL}/Quadras/${id}/status`,
     {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: obterHeaders(),
       body: JSON.stringify(ativa),
     }
   );
@@ -124,7 +131,9 @@ export async function alterarStatusQuadra(id, ativa) {
 // =========================
 
 export async function buscarUsuarios() {
-  const response = await fetch(`${API_URL}/Usuarios`);
+  const response = await fetch(`${API_URL}/Usuarios`, {
+    headers: obterHeaders(),
+  });
 
   if (!response.ok) {
     await tratarErroResponse(
@@ -139,9 +148,7 @@ export async function buscarUsuarios() {
 export async function criarUsuario(usuario) {
   const response = await fetch(`${API_URL}/Usuarios`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: obterHeaders(),
     body: JSON.stringify(usuario),
   });
 
@@ -158,9 +165,7 @@ export async function criarUsuario(usuario) {
 export async function editarUsuario(id, usuario) {
   const response = await fetch(`${API_URL}/Usuarios/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: obterHeaders(),
     body: JSON.stringify(usuario),
   });
 
@@ -179,9 +184,7 @@ export async function alterarStatusUsuario(id, ativo) {
     `${API_URL}/Usuarios/${id}/status`,
     {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: obterHeaders(),
       body: JSON.stringify(ativo),
     }
   );
@@ -201,7 +204,9 @@ export async function alterarStatusUsuario(id, ativo) {
 // =========================
 
 export async function buscarReservas() {
-  const response = await fetch(`${API_URL}/Reservas`);
+  const response = await fetch(`${API_URL}/Reservas`, {
+    headers: obterHeaders(),
+  });
 
   if (!response.ok) {
     await tratarErroResponse(
@@ -216,9 +221,7 @@ export async function buscarReservas() {
 export async function criarReserva(reserva) {
   const response = await fetch(`${API_URL}/Reservas`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: obterHeaders(),
     body: JSON.stringify(reserva),
   });
 
@@ -235,9 +238,7 @@ export async function criarReserva(reserva) {
 export async function editarReserva(id, reserva) {
   const response = await fetch(`${API_URL}/Reservas/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: obterHeaders(),
     body: JSON.stringify(reserva),
   });
 
@@ -256,9 +257,7 @@ export async function alterarStatusReserva(id, ativa) {
     `${API_URL}/Reservas/${id}/status`,
     {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: obterHeaders(),
       body: JSON.stringify(ativa),
     }
   );
@@ -271,4 +270,26 @@ export async function alterarStatusReserva(id, ativa) {
   }
 
   return response.json();
+}
+
+export async function fazerLogin(email, senha) {
+  const response = await fetch(`${API_URL}/Auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      senha,
+    }),
+  });
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível realizar o login."
+    );
+  }
+
+  return await response.json();
 }
