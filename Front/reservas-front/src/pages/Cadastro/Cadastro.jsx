@@ -5,7 +5,13 @@ import {
   Paper,
   TextField,
   Typography,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
+import {
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import { criarUsuario } from "../../services/api";
 import {
   validarCampo,
@@ -20,7 +26,8 @@ export default function Cadastro({ onVoltar }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
-
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -169,22 +176,54 @@ export default function Cadastro({ onVoltar }) {
 
           <TextField
             label="Senha"
-            type="password"
+            type={mostrarSenha ? "text" : "password"}
             value={senha}
-            onChange={(event) => setSenha(event.target.value)}
+            onChange={(e) => setSenha(e.target.value)}
             fullWidth
-            required
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      type="button"
+                      onClick={() => setMostrarSenha((prev) => !prev)}
+                      edge="end"
+                    >
+                      {mostrarSenha ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
 
           <TextField
             label="Confirmar senha"
-            type="password"
+            type={mostrarConfirmarSenha ? "text" : "password"}
             value={confirmarSenha}
-            onChange={(event) =>
-              setConfirmarSenha(event.target.value)
-            }
+            onChange={(e) => setConfirmarSenha(e.target.value)}
             fullWidth
-            required
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      type="button"
+                      onClick={() =>
+                        setMostrarConfirmarSenha((prev) => !prev)
+                      }
+                      edge="end"
+                    >
+                      {mostrarConfirmarSenha ? (
+                        <VisibilityOff />
+                      ) : (
+                        <Visibility />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
 
           {erro && (

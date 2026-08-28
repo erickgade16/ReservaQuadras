@@ -5,8 +5,13 @@ import {
   Paper,
   TextField,
   Typography,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
-
+import {
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import { fazerLogin } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -22,6 +27,7 @@ export default function Login({ onCadastro }) {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   async function handleLogin(event) {
     event.preventDefault();
@@ -53,19 +59,19 @@ export default function Login({ onCadastro }) {
   }
 
   function validarFormulario() {
-  const erros = {
-    email: validarCampo(email, [
-      required("Informe o e-mail."),
-      validarEmail("Informe um e-mail válido."),
-    ]),
+    const erros = {
+      email: validarCampo(email, [
+        required("Informe o e-mail."),
+        validarEmail("Informe um e-mail válido."),
+      ]),
 
-    senha: validarCampo(senha, [
-      required("Informe a senha."),
-    ]),
-  };
+      senha: validarCampo(senha, [
+        required("Informe a senha."),
+      ]),
+    };
 
-  return Object.values(erros).find(Boolean) || null;
-}
+    return Object.values(erros).find(Boolean) || null;
+  }
 
   return (
     <Box
@@ -128,11 +134,28 @@ export default function Login({ onCadastro }) {
 
           <TextField
             label="Senha"
-            type="password"
+            type={mostrarSenha ? "text" : "password"}
             value={senha}
-            onChange={(event) => setSenha(event.target.value)}
+            onChange={(e) => setSenha(e.target.value)}
             fullWidth
-            required
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      type="button"
+                      onClick={() => setMostrarSenha((prev) => !prev)}
+                      edge="end"
+                      aria-label={
+                        mostrarSenha ? "Ocultar senha" : "Mostrar senha"
+                      }
+                    >
+                      {mostrarSenha ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
 
           {erro && (
