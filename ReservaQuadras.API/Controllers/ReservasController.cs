@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ReservaQuadras.API.Data;
 using ReservaQuadras.API.Entities;
-
+using ReservaQuadras.API.Services;
 
 namespace ReservaQuadras.API.Controllers;
 
@@ -12,20 +10,17 @@ namespace ReservaQuadras.API.Controllers;
 [Authorize]
 public class ReservasController : ControllerBase
 {
-    private readonly ReservaQuadrasContext _context;
+    private readonly IReservaService _reservaService;
 
-    public ReservasController(ReservaQuadrasContext context)
+    public ReservasController(IReservaService reservaService)
     {
-        _context = context;
+        _reservaService = reservaService;
     }
 
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var reservas = await _context.Reservas
-            .Include(r => r.Usuario)
-            .Include(r => r.Quadra)
-            .ToListAsync();
+        var reservas = await _reservaService.ListarAsync();
 
         return Ok(reservas);
     }
@@ -33,191 +28,94 @@ public class ReservasController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post(Reserva reserva)
     {
-        var usuario = await _context.Usuarios
-            .FindAsync(reserva.UsuarioId);
-
-        if (usuario == null)
-            return BadRequest("Usuário não encontrado.");
-
-        var quadra = await _context.Quadras
-            .FindAsync(reserva.QuadraId);
-
-        if (quadra == null)
-            return BadRequest("Quadra não encontrada.");
-
-        if (!quadra.Ativa)
-            return BadRequest("A quadra está inativa.");
-
-        var conflito = await _context.Reservas
-    .AnyAsync(r =>
-        r.QuadraId == reserva.QuadraId &&
-        r.DataReserva == reserva.DataReserva &&
-        r.Ativo &&
-        reserva.HoraInicio < r.HoraFim &&
-        reserva.HoraFim > r.HoraInicio
-    );
-
-        if (conflito)
+        try
         {
-            return BadRequest("A quadra já está reservada nesse horário.");
+            var reservaCriada =
+                await _reservaService.CriarAsync(reserva);
+
+            return Ok(reservaCriada);
         }
-
-        _context.Reservas.Add(reserva);
-
-        await _context.SaveChangesAsync();
-
-        return Ok(reserva);
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
-    [HttpPut("{Id}")]
-    public async Task<IActionResult> Put(int Id, Reserva reserva)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Put(
+        int id,
+        Reserva reserva)
     {
-        if (Id != reserva.Id)
-            return BadRequest("O ID da URL é diferente do ID da reserva.");
-
-        var usuario = await _context.Usuarios
-            .FindAsync(reserva.UsuarioId);
-
-        if (usuario == null)
-            return BadRequest("Usuário não encontrado.");
-
-        if (!usuario.Ativo)
-            return BadRequest("O usuário está inativo.");
-
-        var quadra = await _context.Quadras
-            .FindAsync(reserva.QuadraId);
-
-        if (quadra == null)
-            return BadRequest("Quadra não encontrada.");
-
-        if (!quadra.Ativa)
-            return BadRequest("A quadra está inativa.");
-
-        if (reserva.HoraInicio >= reserva.HoraFim)
+        try
         {
-            return BadRequest(
-                "O horário de início deve ser menor que o horário de fim."
-            );
-        }
+            var reservaAtualizada =
+                await _reservaService.AtualizarAsync(
+                    id,
+                    reserva);
 
-        if (reserva.HoraInicio < quadra.HoraAbertura ||
-            reserva.HoraFim > quadra.HoraFechamento)
+            if (reservaAtualizada == null)
+                return NotFound("Reserva não encontrada.");
+
+            return Ok(reservaAtualizada);
+        }
+        catch (InvalidOperationException ex)
         {
-            return BadRequest(
-                $"A reserva deve estar entre " +
-                $"{quadra.HoraAbertura:hh\\:mm} e " +
-                $"{quadra.HoraFechamento:hh\\:mm}."
-            );
+            return BadRequest(ex.Message);
         }
-
-        var conflito = await _context.Reservas
-            .AnyAsync(r =>
-                r.Id != reserva.Id &&
-                r.QuadraId == reserva.QuadraId &&
-                r.DataReserva == reserva.DataReserva &&
-                r.Ativo &&
-                reserva.HoraInicio < r.HoraFim &&
-                reserva.HoraFim > r.HoraInicio
-            );
-
-        if (conflito)
-        {
-            return BadRequest(
-                "A quadra já está reservada nesse horário."
-            );
-        }
-
-        _context.Reservas.Update(reserva);
-
-        await _context.SaveChangesAsync();
-
-        return Ok(reserva);
     }
 
     [HttpGet("quadra/{quadraId}")]
     public async Task<IActionResult> GetReservasPorQuadra(
-    int quadraId,
-    DateTime data)
+        int quadraId,
+        DateTime data)
     {
-        var quadra = await _context.Quadras
-            .FindAsync(quadraId);
+        var reservas =
+            await _reservaService.ListarPorQuadraAsync(
+                quadraId,
+                data);
 
-        if (quadra == null)
+        if (reservas == null)
             return NotFound("Quadra não encontrada.");
-
-        var reservas = await _context.Reservas
-            .Where(r =>
-                r.QuadraId == quadraId &&
-                r.DataReserva.Date == data.Date &&
-                r.Ativo == true)
-            .OrderBy(r => r.HoraInicio)
-            .ToListAsync();
 
         return Ok(reservas);
     }
 
-
     [HttpGet("quadra/{quadraId}/horarios-disponiveis")]
     public async Task<IActionResult> GetHorariosDisponiveis(
-    int quadraId,
-    DateTime data)
+        int quadraId,
+        DateTime data)
     {
-        var quadra = await _context.Quadras
-            .FindAsync(quadraId);
-
-        if (quadra == null)
-            return NotFound("Quadra não encontrada.");
-
-        if (!quadra.Ativa)
-            return BadRequest("A quadra está inativa.");
-
-        var reservas = await _context.Reservas
-            .Where(r =>
-                r.QuadraId == quadraId &&
-                r.DataReserva.Date == data.Date &&
-                r.Ativo == true)
-            .ToListAsync();
-
-        var horariosDisponiveis = new List<object>();
-
-        for (
-            var inicio = quadra.HoraAbertura;
-            inicio < quadra.HoraFechamento;
-            inicio = inicio.Add(TimeSpan.FromHours(1)))
+        try
         {
-            var fim = inicio.Add(TimeSpan.FromHours(1));
+            var horarios =
+                await _reservaService
+                    .BuscarHorariosDisponiveisAsync(
+                        quadraId,
+                        data);
 
-            if (fim > quadra.HoraFechamento)
-                break;
+            if (horarios == null)
+                return NotFound("Quadra não encontrada.");
 
-            var ocupado = reservas.Any(r =>
-                inicio < r.HoraFim &&
-                fim > r.HoraInicio);
-
-            horariosDisponiveis.Add(new
-            {
-                horaInicio = inicio,
-                horaFim = fim,
-                disponivel = !ocupado
-            });
+            return Ok(horarios);
         }
-
-        return Ok(horariosDisponiveis);
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPatch("{id}/status")]
     public async Task<IActionResult> AlterarStatus(
-     int id,
-     [FromBody] bool ativo)
+        int id,
+        [FromBody] bool ativo)
     {
-        var reserva = await _context.Reservas.FindAsync(id);
+        var reserva =
+            await _reservaService.AlterarStatusAsync(
+                id,
+                ativo);
 
         if (reserva == null)
             return NotFound("Reserva não encontrada.");
-
-        reserva.Ativo = ativo;
-
-        await _context.SaveChangesAsync();
 
         return Ok(reserva);
     }

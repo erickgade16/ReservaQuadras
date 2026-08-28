@@ -1,63 +1,73 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ReservaQuadras.API.Data;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ReservaQuadras.API.Entities;
-using Microsoft.AspNetCore.Authorization;
+using ReservaQuadras.API.Services;
 
 namespace ReservaQuadras.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class QuadrasController : Controller
+    public class QuadrasController : ControllerBase
     {
-        private readonly ReservaQuadrasContext _context;
+        private readonly IQuadraService _quadraService;
 
-        public QuadrasController(ReservaQuadrasContext context)
+        public QuadrasController(IQuadraService quadraService)
         {
-            _context = context;
+            _quadraService = quadraService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var quadras = await _context.Quadras.ToListAsync();
+            var quadras = await _quadraService.ListarAsync();
 
             return Ok(quadras);
         }
+
         [HttpPost]
         public async Task<IActionResult> Post(Quadra quadra)
         {
-            _context.Quadras.Add(quadra);
+            var quadraCriada =
+                await _quadraService.CriarAsync(quadra);
 
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(Get), new { id = quadra.Id }, quadra);
+            return CreatedAtAction(
+                nameof(Get),
+                new { id = quadraCriada.Id },
+                quadraCriada
+            );
         }
 
         [HttpPut("{quadraId}")]
-        public async Task<IActionResult> Put(Quadra quadra)
+        public async Task<IActionResult> Put(
+            int quadraId,
+            Quadra quadra)
         {
-            _context.Quadras.Update(quadra);
+            var quadraAtualizada =
+                await _quadraService.AtualizarAsync(
+                    quadraId,
+                    quadra
+                );
 
-            await _context.SaveChangesAsync();
+            if (quadraAtualizada == null)
+                return NotFound("Quadra não encontrada.");
 
-            return CreatedAtAction(nameof(Get), new { id = quadra.Id }, quadra);
+            return Ok(quadraAtualizada);
         }
 
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> AlterarStatus(
-     int id,
-     [FromBody] bool ativa)
+            int id,
+            [FromBody] bool ativa)
         {
-            var quadra = await _context.Quadras.FindAsync(id);
+            var quadra =
+                await _quadraService.AlterarStatusAsync(
+                    id,
+                    ativa
+                );
 
             if (quadra == null)
                 return NotFound("Quadra não encontrada.");
-
-            quadra.Ativa = ativa;
-
-            await _context.SaveChangesAsync();
 
             return Ok(quadra);
         }

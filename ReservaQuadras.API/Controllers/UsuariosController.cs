@@ -1,97 +1,90 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ReservaQuadras.API.Data;
 using ReservaQuadras.API.Entities;
-using Microsoft.AspNetCore.Identity;
+using ReservaQuadras.API.Services;
 
-namespace ReservaQuadras.API.Controllers
+namespace ReservaQuadras.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class UsuariosController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UsuariosController : Controller
+    private readonly IUsuarioService _usuarioService;
+
+    public UsuariosController(IUsuarioService usuarioService)
     {
+        _usuarioService = usuarioService;
+    }
 
-        private readonly ReservaQuadrasContext _context;
-        private readonly IPasswordHasher<Entities.Usuario> _passwordHasher;
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> Get()
+    {
+        var usuarios = await _usuarioService.ListarAsync();
 
-        public UsuariosController(
-        ReservaQuadrasContext context,
-        IPasswordHasher<Usuario> passwordHasher)
+        return Ok(usuarios);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Post(Usuario usuario)
+    {
+        try
         {
-            _context = context;
-            _passwordHasher = passwordHasher;
-        }
-
-        [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> Get()
-        {
-            var usuarios = await _context.Usuarios.ToListAsync();
-
-            return Ok(usuarios);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Post(Usuario usuario)
-        {
-            usuario.Senha = _passwordHasher.HashPassword(
-                usuario,
-                usuario.Senha!
-            );
-
-            _context.Usuarios.Add(usuario);
-
-            await _context.SaveChangesAsync();
+            var usuarioCriado =
+                await _usuarioService.CriarAsync(usuario);
 
             return CreatedAtAction(
                 nameof(Get),
-                new { id = usuario.Id },
-                usuario
+                new { id = usuarioCriado.Id },
+                usuarioCriado
             );
         }
-
-
-        [HttpPut("{id}")]
-        [Authorize]
-        public async Task<IActionResult> Put(int id, Usuario usuario)
+        catch (InvalidOperationException ex)
         {
+            return BadRequest(ex.Message);
+        }
+    }
 
-            var usuarioExistente = await _context.Usuarios.FindAsync(id);
-
-            if (usuarioExistente == null)
-                return NotFound("Usuário não encontrado.");
-
-            usuarioExistente.Nome = usuario.Nome;
-            usuarioExistente.Email = usuario.Email;
-
-            if (!string.IsNullOrWhiteSpace(usuario.Senha))
-            {
-                usuarioExistente.Senha = _passwordHasher.HashPassword(
-                    usuarioExistente,
-                    usuario.Senha
+    [HttpPut("{id}")]
+    [Authorize]
+    public async Task<IActionResult> Put(
+        int id,
+        Usuario usuario)
+    {
+        try
+        {
+            var usuarioAtualizado =
+                await _usuarioService.AtualizarAsync(
+                    id,
+                    usuario
                 );
-            }
 
-            await _context.SaveChangesAsync();
-
-            return Ok(usuarioExistente);
-        }
-
-        [HttpPatch("{id}/status")]
-        [Authorize]
-        public async Task<IActionResult> AlterarStatus(int id, [FromBody] bool ativo)
-        {
-            var usuario = await _context.Usuarios.FindAsync(id);
-
-            if (usuario == null)
+            if (usuarioAtualizado == null)
                 return NotFound("Usuário não encontrado.");
 
-            usuario.Ativo = ativo;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(usuario);
+            return Ok(usuarioAtualizado);
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPatch("{id}/status")]
+    [Authorize]
+    public async Task<IActionResult> AlterarStatus(
+        int id,
+        [FromBody] bool ativo)
+    {
+        var usuario =
+            await _usuarioService.AlterarStatusAsync(
+                id,
+                ativo
+            );
+
+        if (usuario == null)
+            return NotFound("Usuário não encontrado.");
+
+        return Ok(usuario);
     }
 }

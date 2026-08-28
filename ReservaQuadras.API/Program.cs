@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ReservaQuadras.API.Data;
 using ReservaQuadras.API.Entities;
+using ReservaQuadras.API.Repositories;
+using ReservaQuadras.API.Services;
 using System.ComponentModel;
 using System.Text;
 
@@ -69,6 +71,20 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+
+builder.Services.AddScoped<IQuadraRepository, QuadraRepository>();
+
+builder.Services.AddScoped<IQuadraService, QuadraService>();
+
+builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+
+builder.Services.AddScoped<IReservaService, ReservaService>();
+
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 

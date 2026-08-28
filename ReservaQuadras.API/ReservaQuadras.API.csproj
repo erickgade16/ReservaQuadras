@@ -20,8 +20,6 @@
     <Folder Include="Data\Context\" />
     <Folder Include="Enums\" />
     <Folder Include="MIgrations\" />
-    <Folder Include="Services\" />
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
 </Project>
