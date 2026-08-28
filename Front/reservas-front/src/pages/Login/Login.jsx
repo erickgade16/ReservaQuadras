@@ -9,6 +9,11 @@ import {
 
 import { fazerLogin } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import {
+  validarCampo,
+  required,
+  email as validarEmail,
+} from "../../utils/validation";
 
 export default function Login({ onCadastro }) {
   const { login } = useAuth();
@@ -22,6 +27,13 @@ export default function Login({ onCadastro }) {
     event.preventDefault();
 
     if (carregando) {
+      return;
+    }
+
+    const erroValidacao = validarFormulario();
+
+    if (erroValidacao) {
+      setErro(erroValidacao);
       return;
     }
 
@@ -39,6 +51,21 @@ export default function Login({ onCadastro }) {
       setCarregando(false);
     }
   }
+
+  function validarFormulario() {
+  const erros = {
+    email: validarCampo(email, [
+      required("Informe o e-mail."),
+      validarEmail("Informe um e-mail válido."),
+    ]),
+
+    senha: validarCampo(senha, [
+      required("Informe a senha."),
+    ]),
+  };
+
+  return Object.values(erros).find(Boolean) || null;
+}
 
   return (
     <Box
@@ -83,6 +110,7 @@ export default function Login({ onCadastro }) {
         <Box
           component="form"
           onSubmit={handleLogin}
+          noValidate
           sx={{
             display: "flex",
             flexDirection: "column",

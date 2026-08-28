@@ -6,8 +6,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-
 import { criarUsuario } from "../../services/api";
+import {
+  validarCampo,
+  required,
+  email as validarEmail,
+  minLength,
+} from "../../utils/validation";
+
 
 export default function Cadastro({ onVoltar }) {
   const [nome, setNome] = useState("");
@@ -21,6 +27,13 @@ export default function Cadastro({ onVoltar }) {
 
   async function handleCadastro(event) {
     event.preventDefault();
+
+    const erroValidacao = validarFormulario();
+
+    if (erroValidacao) {
+      setErro(erroValidacao);
+      return;
+    }
 
     if (carregando) {
       return;
@@ -62,6 +75,29 @@ export default function Cadastro({ onVoltar }) {
     } finally {
       setCarregando(false);
     }
+  }
+
+  function validarFormulario() {
+    const erros = {
+      nome: validarCampo(nome, [
+        required("Informe o nome."),
+      ]),
+
+      email: validarCampo(email, [
+        required("Informe o e-mail."),
+        validarEmail("Informe um e-mail válido."),
+      ]),
+
+      senha: validarCampo(senha, [
+        required("Informe a senha."),
+        minLength(
+          6,
+          "A senha deve ter pelo menos 6 caracteres."
+        ),
+      ]),
+    };
+
+    return Object.values(erros).find(Boolean) || null;
   }
 
   return (
@@ -107,6 +143,7 @@ export default function Cadastro({ onVoltar }) {
         <Box
           component="form"
           onSubmit={handleCadastro}
+          noValidate
           sx={{
             display: "flex",
             flexDirection: "column",
