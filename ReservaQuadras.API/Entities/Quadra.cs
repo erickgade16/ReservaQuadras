@@ -12,6 +12,8 @@
 
         public bool Ativa { get; set; }
 
+        public int? DuracaoReservaMinutos { get; set; }
+
         public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
 
         public TimeSpan HoraAbertura { get; set; }

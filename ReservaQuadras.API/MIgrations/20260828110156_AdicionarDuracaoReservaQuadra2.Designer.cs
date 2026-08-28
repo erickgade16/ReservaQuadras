@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ReservaQuadras.API.Data;
 
@@ -11,9 +12,11 @@ using ReservaQuadras.API.Data;
 namespace ReservaQuadras.API.Migrations
 {
     [DbContext(typeof(ReservaQuadrasContext))]
-    partial class ReservaQuadrasContextModelSnapshot : ModelSnapshot
+    [Migration("20260828110156_AdicionarDuracaoReservaQuadra2")]
+    partial class AdicionarDuracaoReservaQuadra2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,9 +35,6 @@ namespace ReservaQuadras.API.Migrations
 
                     b.Property<bool>("Ativa")
                         .HasColumnType("bit");
-
-                    b.Property<int?>("DuracaoReservaMinutos")
-                        .HasColumnType("int");
 
                     b.Property<TimeSpan>("HoraAbertura")
                         .HasColumnType("time");
@@ -74,6 +74,9 @@ namespace ReservaQuadras.API.Migrations
 
                     b.Property<DateTime>("DataReserva")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("DuracaoReservaMinutos")
+                        .HasColumnType("int");
 
                     b.Property<TimeSpan>("HoraFim")
                         .HasColumnType("time");

@@ -141,8 +141,8 @@ public class ReservaService : IReservaService
     }
 
     public async Task<object[]?> BuscarHorariosDisponiveisAsync(
-        int quadraId,
-        DateTime data)
+    int quadraId,
+    DateTime data)
     {
         var quadra =
             await _quadraRepository.BuscarPorIdAsync(
@@ -163,17 +163,28 @@ public class ReservaService : IReservaService
 
         var horariosDisponiveis = new List<object>();
 
+        if (!quadra.DuracaoReservaMinutos.HasValue ||
+    quadra.DuracaoReservaMinutos <= 0)
+        {
+            throw new InvalidOperationException(
+                "A quadra não possui uma duração de reserva configurada.");
+        }
+
+        var duracao = TimeSpan.FromMinutes(
+            quadra.DuracaoReservaMinutos.Value);
+
         for (
             var inicio = quadra.HoraAbertura;
             inicio < quadra.HoraFechamento;
-            inicio = inicio.Add(TimeSpan.FromHours(1)))
+            inicio = inicio.Add(duracao))
         {
-            var fim = inicio.Add(TimeSpan.FromHours(1));
+            var fim = inicio.Add(duracao);
 
             if (fim > quadra.HoraFechamento)
                 break;
 
             var ocupado = reservas.Any(r =>
+                r.Ativo &&
                 inicio < r.HoraFim &&
                 fim > r.HoraInicio);
 

@@ -218,6 +218,25 @@ export async function buscarReservas() {
   return response.json();
 }
 
+export async function buscarHorariosDisponiveis(quadraId, data) {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_URL}/Reservas/quadra/${quadraId}/horarios-disponiveis?data=${data}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Não foi possível buscar os horários.");
+  }
+
+  return await response.json();
+}
+
 export async function criarReserva(reserva) {
   const response = await fetch(`${API_URL}/Reservas`, {
     method: "POST",

@@ -49,6 +49,7 @@ export default function Quadras() {
   const [snackbarAberto, setSnackbarAberto] = useState(false);
   const [snackbarMensagem, setSnackbarMensagem] = useState("");
   const [snackbarSeveridade, setSnackbarSeveridade] = useState("success");
+  const [duracaoReservaMinutos, setDuracaoReservaMinutos] = useState("");
 
   useEffect(() => {
     carregarQuadras();
@@ -78,6 +79,7 @@ export default function Quadras() {
     setHoraFechamento("");
     setAtiva(true);
     setQuadraEditando(null);
+    setDuracaoReservaMinutos("");
   }
 
   function abrirFormulario() {
@@ -97,6 +99,9 @@ export default function Quadras() {
     setHoraAbertura(quadra.horaAbertura || "");
     setHoraFechamento(quadra.horaFechamento || "");
     setAtiva(quadra.ativa);
+    setDuracaoReservaMinutos(
+      quadra.duracaoReservaMinutos ?? ""
+    );
 
     setFormularioAberto(true);
   }
@@ -125,6 +130,13 @@ export default function Quadras() {
       horaAbertura: validarCampo(horaAbertura, [
         required("Informe o horário de abertura."),
       ]),
+
+      duracaoReservaMinutos: validarCampo(
+        duracaoReservaMinutos,
+        [
+          required("Informe a duração da reserva."),
+        ]
+      ),
 
       horaFechamento: validarCampo(horaFechamento, [
         required("Informe o horário de fechamento."),
@@ -164,6 +176,7 @@ export default function Quadras() {
         ativa,
         horaAbertura,
         horaFechamento,
+        duracaoReservaMinutos: Number(duracaoReservaMinutos),
       };
 
       if (quadraEditando) {
@@ -331,6 +344,7 @@ export default function Quadras() {
             label: "Fechamento",
           },
 
+          
           {
             field: "ativa",
             label: "Status",
@@ -462,6 +476,34 @@ export default function Quadras() {
               required
             />
           </Box>
+
+          <TextField
+            select
+            label="Duração da reserva"
+            value={duracaoReservaMinutos}
+            onChange={(event) =>
+              setDuracaoReservaMinutos(event.target.value)
+            }
+            fullWidth
+            required
+          >
+            <MenuItem value="30">
+              30 minutos
+            </MenuItem>
+
+            <MenuItem value="60">
+              1 hora
+            </MenuItem>
+
+            <MenuItem value="90">
+              1 hora e 30 minutos
+            </MenuItem>
+
+            <MenuItem value="120">
+              2 horas
+            </MenuItem>
+          </TextField>
+
 
           <TextField
             select

@@ -37,6 +37,7 @@ public class QuadraService : IQuadraService
         quadraExistente.PrecoHora = quadra.PrecoHora;
         quadraExistente.HoraAbertura = quadra.HoraAbertura;
         quadraExistente.HoraFechamento = quadra.HoraFechamento;
+        quadraExistente.DuracaoReservaMinutos = quadra.DuracaoReservaMinutos;
 
         await _quadraRepository.AtualizarAsync();
 

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
   Box,
   Button,
@@ -7,22 +6,23 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { ptBR } from "date-fns/locale";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
-
 import {
   buscarReservas,
   buscarUsuarios,
   buscarQuadras,
   criarReserva,
+  buscarHorariosDisponiveis,
   editarReserva,
   alterarStatusReserva,
 } from "../../services/api";
-
 import PageTable from "../../components/PageTable";
 import FormDialog from "../../components/FormDialog";
 import StatusSwitch from "../../components/StatusSwitch";
-
 import {
   validarCampo,
   required,
@@ -58,11 +58,15 @@ export default function Reservas() {
   const [snackbarMensagem, setSnackbarMensagem] = useState("");
   const [snackbarSeveridade, setSnackbarSeveridade] = useState("success");
 
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
+  const [carregandoHorarios, setCarregandoHorarios] = useState(false);
+
 
   useEffect(() => {
     carregarReservas();
     carregarDadosFormulario();
-  }, []);
+    carregarHorariosDisponiveis();
+  }, [quadraId, dataReserva]);
 
   async function carregarReservas() {
     try {
@@ -356,6 +360,30 @@ export default function Reservas() {
     setSnackbarAberto(false);
   }
 
+  async function carregarHorariosDisponiveis() {
+    if (!quadraId || !dataReserva) {
+      setHorariosDisponiveis([]);
+      return;
+    }
+
+    try {
+      setCarregandoHorarios(true);
+
+      const horarios = await buscarHorariosDisponiveis(
+        quadraId,
+        dataReserva
+      );
+
+      setHorariosDisponiveis(horarios);
+    } catch (error) {
+      console.error(error);
+      setHorariosDisponiveis([]);
+      setErro(error.message);
+    } finally {
+      setCarregandoHorarios(false);
+    }
+  }
+
   return (
     <Box>
       <PageTable
@@ -549,67 +577,124 @@ export default function Reservas() {
               ))}
           </TextField>
 
-          {/* DATA */}
-          <TextField
-            label="Data da reserva"
-            type="date"
-            value={dataReserva}
-            onChange={(event) =>
-              setDataReserva(event.target.value)
-            }
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-            }}
-            fullWidth
-            required
-          />
-
-          {/* HORÁRIOS */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns:
-                "1fr 1fr",
-              gap: 2,
-            }}
+          <LocalizationProvider
+            dateAdapter={AdapterDateFns}
+            adapterLocale={ptBR}
           >
-            <TextField
-              label="Hora de início"
-              type="time"
-              value={horaInicio}
-              onChange={(event) =>
-                setHoraInicio(
-                  event.target.value
-                )
+            <DatePicker
+              label="Data da reserva"
+              format="dd/MM/yyyy"
+              value={
+                dataReserva
+                  ? new Date(`${dataReserva}T00:00:00`)
+                  : null
               }
-              slotProps={{
-                inputLabel: {
-                  shrink: true,
-                },
-              }}
-              fullWidth
-              required
-            />
+              onChange={(novaData) => {
+                if (!novaData) {
+                  setDataReserva("");
+                  return;
+                }
 
-            <TextField
-              label="Hora de fim"
-              type="time"
-              value={horaFim}
-              onChange={(event) =>
-                setHoraFim(
-                  event.target.value
-                )
-              }
+                const ano = novaData.getFullYear();
+                const mes = String(
+                  novaData.getMonth() + 1
+                ).padStart(2, "0");
+                const dia = String(
+                  novaData.getDate()
+                ).padStart(2, "0");
+
+                setDataReserva(`${ano}-${mes}-${dia}`);
+              }}
               slotProps={{
-                inputLabel: {
-                  shrink: true,
+                textField: {
+                  fullWidth: true,
                 },
               }}
-              fullWidth
-              required
             />
+          </LocalizationProvider>
+
+          <Box>
+            <Typography
+              sx={{
+                fontSize: 14,
+                fontWeight: 600,
+                mb: 1,
+              }}
+            >
+              Horários disponíveis
+            </Typography>
+
+            {carregandoHorarios ? (
+              <Typography color="text.secondary">
+                Carregando horários...
+              </Typography>
+            ) : (
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(2, 1fr)",
+                  gap: 1,
+                }}
+              >
+                {horariosDisponiveis.map((horario) => {
+                  const inicio =
+                    horario.horaInicio.substring(0, 5);
+
+                  const fim =
+                    horario.horaFim.substring(0, 5);
+
+                  const selecionado =
+                    horaInicio === inicio &&
+                    horaFim === fim;
+
+                  return (
+                    <Button
+                      key={`${inicio}-${fim}`}
+                      variant={selecionado ? "contained" : "outlined"}
+                      disabled={!horario.disponivel}
+                      onClick={() => {
+                        setHoraInicio(inicio);
+                        setHoraFim(fim);
+                      }}
+                      sx={{
+                        textTransform: "none",
+                        borderRadius: 2,
+
+                        color: horario.disponivel
+                          ? "#198754"
+                          : "#9ca3af",
+
+                        borderColor: horario.disponivel
+                          ? "#198754"
+                          : "#d1d5db",
+
+                        backgroundColor: selecionado
+                          ? "#198754"
+                          : "transparent",
+
+                        "&:hover": {
+                          backgroundColor: horario.disponivel
+                            ? "#e8f5ee"
+                            : "transparent",
+                          borderColor: horario.disponivel
+                            ? "#157347"
+                            : "#d1d5db",
+                        },
+
+                        "&.Mui-disabled": {
+                          color: "#9ca3af",
+                          borderColor: "#e5e7eb",
+                          backgroundColor: "#f3f4f6",
+                        },
+                      }}
+                    >
+                      {inicio} - {fim}
+                    </Button>
+                  );
+                })}
+              </Box>
+            )}
           </Box>
 
           {/* ERRO */}
