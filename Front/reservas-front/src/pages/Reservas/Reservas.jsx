@@ -361,8 +361,34 @@ export default function Reservas() {
       <PageTable
         titulo="Reservas"
         descricao="Gerencie as reservas das quadras."
-        textoBotao="Novo"
+        textoBotao="Nova Reserva"
         onClick={abrirFormulario}
+
+        search={{
+          enabled: true,
+          placeholder: "Buscar por usuário ou quadra...",
+          fields: ["usuario.nome", "quadra.nome"],
+        }}
+
+        filters={[
+          {
+            field: "status",
+            label: "Status",
+            options: [
+              { value: "todos", label: "Todos" },
+              { value: "Confirmada", label: "Confirmadas" },
+              { value: "Cancelada", label: "Canceladas" },
+            ],
+          },
+        ]}
+
+        sortOptions={[
+          { field: "dataReserva", label: "Data" },
+          { field: "horaInicio", label: "Horário" },
+          { field: "usuario.nome", label: "Usuário" },
+          { field: "quadra.nome", label: "Quadra" },
+          { field: "status", label: "Status" },
+        ]}
         columns={[
           {
             field: "usuario",

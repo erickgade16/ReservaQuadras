@@ -236,7 +236,7 @@ export default function Quadras() {
       );
     } catch (error) {
       console.error(error);
-     mostrarSnackbar(error.message, "error");
+      mostrarSnackbar(error.message, "error");
     } finally {
       setAlterandoStatus(false);
     }
@@ -265,8 +265,44 @@ export default function Quadras() {
       <PageTable
         titulo="Quadras"
         descricao="Gerencie as quadras disponíveis para reserva."
-        textoBotao="Novo"
+        textoBotao="Nova Quadra"
         onClick={abrirFormulario}
+
+        search={{
+          enabled: true,
+          placeholder: "Buscar por nome...",
+          fields: ["nome"],
+        }}
+
+        filters={[
+          {
+            field: "tipo",
+            label: "Tipo",
+            options: [
+              { value: "todos", label: "Todos" },
+              { value: "Futebol", label: "Futebol" },
+              { value: "Futsal", label: "Futsal" },
+              { value: "Tênis", label: "Tênis" },
+              { value: "Vôlei", label: "Vôlei" },
+            ],
+          },
+          {
+            field: "ativa",
+            label: "Status",
+            options: [
+              { value: "todos", label: "Todas" },
+              { value: true, label: "Ativas" },
+              { value: false, label: "Inativas" },
+            ],
+          },
+        ]}
+
+        sortOptions={[
+          { field: "nome", label: "Nome" },
+          { field: "tipo", label: "Tipo" },
+          { field: "precoHora", label: "Preço/hora" },
+          { field: "ativa", label: "Status" },
+        ]}
         columns={[
           {
             field: "nome",

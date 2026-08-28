@@ -244,9 +244,33 @@ export default function Usuarios() {
     <Box>
       <PageTable
         titulo="Usuários"
-        descricao="Gerencie os usuários cadastrados no sistema."
+        descricao="Visualize os usuários cadastrados no sistema."
         //textoBotao="Novo Usuário"
         //onClick={abrirFormularioNovo}
+        search={{
+          enabled: true,
+          placeholder: "Buscar por nome ou e-mail...",
+          fields: ["nome", "email"],
+        }}
+
+        filters={[
+          {
+            field: "ativo",
+            label: "Status",
+            options: [
+              { value: "todos", label: "Todos" },
+              { value: true, label: "Ativos" },
+              { value: false, label: "Inativos" },
+            ],
+          },
+        ]}
+
+        sortOptions={[
+          { field: "nome", label: "Nome" },
+          { field: "email", label: "E-mail" },
+          { field: "dataCadastro", label: "Data de cadastro" },
+        ]}
+
         columns={[
           {
             field: "nome",
