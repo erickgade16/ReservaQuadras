@@ -15,6 +15,9 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IPasswordHasher<Usuario> _passwordHasher;
 
+    // CONTADOR DE TENTATIVAS
+    private static readonly Dictionary<int, int> TentativasLogin = new();
+
     public AuthService(
         IUsuarioRepository usuarioRepository,
         IConfiguration configuration,
@@ -33,6 +36,13 @@ public class AuthService : IAuthService
         if (usuario == null)
             return null;
 
+        if (usuario.Bloqueado)
+        {
+            throw new InvalidOperationException(
+                "Usuário bloqueado."
+            );
+        }
+
         var resultado = _passwordHasher.VerifyHashedPassword(
             usuario,
             usuario.Senha!,
@@ -40,12 +50,40 @@ public class AuthService : IAuthService
         );
 
         if (resultado == PasswordVerificationResult.Failed)
-            return null;
+        {
+            if (!TentativasLogin.ContainsKey(usuario.Id))
+            {
+                TentativasLogin[usuario.Id] = 0;
+            }
+
+            TentativasLogin[usuario.Id]++;
+
+            if (TentativasLogin[usuario.Id] >= 10)
+            {
+                usuario.Bloqueado = true;
+
+                await _usuarioRepository.AtualizarAsync();
+
+                TentativasLogin.Remove(usuario.Id);
+
+                throw new InvalidOperationException(
+                    "Usuário bloqueado após várias tentativas inválidas."
+                );
+            }
+
+            throw new InvalidOperationException(
+                "E-mail ou senha inválidos."
+            );
+        }
+
+        TentativasLogin.Remove(usuario.Id);
 
         if (!usuario.Ativo)
+        {
             throw new InvalidOperationException(
                 "O usuário está inativo."
             );
+        }
 
         var token = GerarToken(usuario);
 
