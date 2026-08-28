@@ -245,8 +245,8 @@ export default function Usuarios() {
       <PageTable
         titulo="Usuários"
         descricao="Gerencie os usuários cadastrados no sistema."
-        textoBotao="Novo Usuário"
-        onClick={abrirFormularioNovo}
+        //textoBotao="Novo Usuário"
+        //onClick={abrirFormularioNovo}
         columns={[
           {
             field: "nome",
@@ -286,26 +286,26 @@ export default function Usuarios() {
             ),
           },
 
-          {
-            field: "acoes",
-            label: "Ações",
-            render: (usuario) => (
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<EditRoundedIcon />}
-                onClick={() =>
-                  abrirFormularioEdicao(usuario)
-                }
-                sx={{
-                  textTransform: "none",
-                  borderRadius: 2,
-                }}
-              >
-                Editar
-              </Button>
-            ),
-          },
+          // {
+          //   field: "acoes",
+          //   label: "Ações",
+          //   render: (usuario) => (
+          //     <Button
+          //       variant="outlined"
+          //       size="small"
+          //       startIcon={<EditRoundedIcon />}
+          //       onClick={() =>
+          //         abrirFormularioEdicao(usuario)
+          //       }
+          //       sx={{
+          //         textTransform: "none",
+          //         borderRadius: 2,
+          //       }}
+          //     >
+          //       Editar
+          //     </Button>
+          //   ),
+          // },
 
 
         ]}
