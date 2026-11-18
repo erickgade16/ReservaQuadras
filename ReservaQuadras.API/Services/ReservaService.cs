@@ -161,6 +161,9 @@ public class ReservaService : IReservaService
                     quadraId,
                     data);
 
+        if (!quadra.FuncionaNoDia(data.DayOfWeek))
+            return Array.Empty<object>();
+
         var horariosDisponiveis = new List<object>();
 
         if (!quadra.DuracaoReservaMinutos.HasValue ||
@@ -234,5 +237,26 @@ public class ReservaService : IReservaService
                 $"{quadra.HoraAbertura:hh\\:mm} e " +
                 $"{quadra.HoraFechamento:hh\\:mm}.");
         }
+
+        if (!quadra.FuncionaNoDia(reserva.DataReserva.DayOfWeek))
+        {
+            throw new InvalidOperationException(
+                "A quadra não funciona nesse dia da semana " +
+                $"({NomeDia(reserva.DataReserva.DayOfWeek)}).");
+        }
+    }
+
+    private static string NomeDia(DayOfWeek dia)
+    {
+        return dia switch
+        {
+            DayOfWeek.Sunday => "domingo",
+            DayOfWeek.Monday => "segunda-feira",
+            DayOfWeek.Tuesday => "terça-feira",
+            DayOfWeek.Wednesday => "quarta-feira",
+            DayOfWeek.Thursday => "quinta-feira",
+            DayOfWeek.Friday => "sexta-feira",
+            _ => "sábado",
+        };
     }
 }

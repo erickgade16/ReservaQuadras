@@ -4,6 +4,7 @@ export default function StatusSwitch({
   checked,
   onChange,
   disabled = false,
+  mostrarTexto = false,
   labelAtivo = "Ativo",
   labelInativo = "Inativo",
 }) {
@@ -20,6 +21,11 @@ export default function StatusSwitch({
         onChange={onChange}
         disabled={disabled}
         disableRipple
+        slotProps={{
+          input: {
+            "aria-label": checked ? labelAtivo : labelInativo,
+          },
+        }}
         sx={{
           width: 42,
           height: 24,
@@ -56,17 +62,19 @@ export default function StatusSwitch({
         }}
       />
 
-      <Typography
-        variant="body2"
-        sx={{
-          fontSize: 13,
-          fontWeight: 500,
-          color: checked ? "#16a34a" : "#64748b",
-          transition: "color 200ms ease",
-        }}
-      >
-        {checked ? labelAtivo : labelInativo}
-      </Typography>
+      {mostrarTexto && (
+        <Typography
+          variant="body2"
+          sx={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: checked ? "#16a34a" : "#64748b",
+            transition: "color 200ms ease",
+          }}
+        >
+          {checked ? labelAtivo : labelInativo}
+        </Typography>
+      )}
     </Box>
   );
 }

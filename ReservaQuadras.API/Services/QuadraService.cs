@@ -19,6 +19,8 @@ public class QuadraService : IQuadraService
 
     public async Task<Quadra> CriarAsync(Quadra quadra)
     {
+        quadra.DiasFuncionamento = NormalizarDias(quadra.DiasFuncionamento);
+
         return await _quadraRepository.CriarAsync(quadra);
     }
 
@@ -38,6 +40,7 @@ public class QuadraService : IQuadraService
         quadraExistente.HoraAbertura = quadra.HoraAbertura;
         quadraExistente.HoraFechamento = quadra.HoraFechamento;
         quadraExistente.DuracaoReservaMinutos = quadra.DuracaoReservaMinutos;
+        quadraExistente.DiasFuncionamento = NormalizarDias(quadra.DiasFuncionamento);
 
         await _quadraRepository.AtualizarAsync();
 
@@ -59,5 +62,22 @@ public class QuadraService : IQuadraService
         await _quadraRepository.AtualizarAsync();
 
         return quadra;
+    }
+
+    // Mantém só dias válidos (0 a 6), sem repetição e em ordem. Vazio = todos os dias.
+    private static string NormalizarDias(string? dias)
+    {
+        var validos = (dias ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(d => int.TryParse(d, out var n) ? n : -1)
+            .Where(n => n is >= 0 and <= 6)
+            .Distinct()
+            .OrderBy(n => n)
+            .ToList();
+
+        if (validos.Count == 0)
+            validos = Enumerable.Range(0, 7).ToList();
+
+        return string.Join(",", validos);
     }
 }

@@ -33,6 +33,12 @@ namespace ReservaQuadras.API.Migrations
                     b.Property<bool>("Ativa")
                         .HasColumnType("bit");
 
+                    b.Property<string>("DiasFuncionamento")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("0,1,2,3,4,5,6");
+
                     b.Property<int?>("DuracaoReservaMinutos")
                         .HasColumnType("int");
 

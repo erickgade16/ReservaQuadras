@@ -16,5 +16,13 @@ namespace ReservaQuadras.API.Data
         public DbSet<Quadra> Quadras { get; set; }
 
         public DbSet<Reserva> Reservas { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Quadras já cadastradas passam a funcionar todos os dias
+            modelBuilder.Entity<Quadra>()
+                .Property(q => q.DiasFuncionamento)
+                .HasDefaultValue("0,1,2,3,4,5,6");
+        }
     }
 }

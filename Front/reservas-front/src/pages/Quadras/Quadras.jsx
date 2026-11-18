@@ -5,6 +5,8 @@ import {
   Button,
   MenuItem,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 
@@ -30,6 +32,61 @@ import {
 import ConfirmDialog from "../../components/ConfirmDialog";
 import AppSnackbar from "../../components/AppSnackbar";
 
+const DIAS_SEMANA = [
+  { valor: 0, curto: "Dom", longo: "Domingo" },
+  { valor: 1, curto: "Seg", longo: "Segunda-feira" },
+  { valor: 2, curto: "Ter", longo: "Terça-feira" },
+  { valor: 3, curto: "Qua", longo: "Quarta-feira" },
+  { valor: 4, curto: "Qui", longo: "Quinta-feira" },
+  { valor: 5, curto: "Sex", longo: "Sexta-feira" },
+  { valor: 6, curto: "Sáb", longo: "Sábado" },
+];
+
+const TODOS_OS_DIAS = [0, 1, 2, 3, 4, 5, 6];
+
+// "1,2,3" -> [1, 2, 3]  (vazio ou inválido = todos os dias)
+function paraArrayDias(texto) {
+  if (!texto) return TODOS_OS_DIAS;
+
+  const dias = texto
+    .split(",")
+    .map(Number)
+    .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6);
+
+  return dias.length ? dias : TODOS_OS_DIAS;
+}
+
+function resumoDias(texto) {
+  const dias = [...paraArrayDias(texto)].sort((a, b) => a - b);
+  const chave = dias.join(",");
+
+  if (chave === "0,1,2,3,4,5,6") return "Todos os dias";
+  if (chave === "1,2,3,4,5") return "Seg a Sex";
+  if (chave === "0,6") return "Fins de semana";
+
+  return dias.map((d) => DIAS_SEMANA[d].curto).join(", ");
+}
+
+// Horários de 30 em 30 minutos: "00:00", "00:30", ... "23:30"
+const HORARIOS = Array.from({ length: 48 }, (_, i) => {
+  const hora = String(Math.floor(i / 2)).padStart(2, "0");
+  return `${hora}:${i % 2 ? "30" : "00"}`;
+});
+
+// Lista com rolagem para não ocupar a tela inteira
+const MENU_HORARIOS = {
+  slotProps: { paper: { sx: { maxHeight: 280 } } },
+};
+
+// Garante que um horário já salvo fora da grade (ex.: 08:15) continue aparecendo
+function opcoesHorario(atual) {
+  if (!atual || HORARIOS.includes(atual)) {
+    return HORARIOS;
+  }
+
+  return [...HORARIOS, atual].sort();
+}
+
 export default function Quadras() {
   const [quadras, setQuadras] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -50,6 +107,7 @@ export default function Quadras() {
   const [snackbarMensagem, setSnackbarMensagem] = useState("");
   const [snackbarSeveridade, setSnackbarSeveridade] = useState("success");
   const [duracaoReservaMinutos, setDuracaoReservaMinutos] = useState("");
+  const [diasFuncionamento, setDiasFuncionamento] = useState(TODOS_OS_DIAS);
 
   useEffect(() => {
     carregarQuadras();
@@ -80,6 +138,7 @@ export default function Quadras() {
     setAtiva(true);
     setQuadraEditando(null);
     setDuracaoReservaMinutos("");
+    setDiasFuncionamento(TODOS_OS_DIAS);
   }
 
   function abrirFormulario() {
@@ -96,9 +155,10 @@ export default function Quadras() {
     setNome(quadra.nome || "");
     setTipo(quadra.tipo || "");
     setPrecoHora(quadra.precoHora ?? "");
-    setHoraAbertura(quadra.horaAbertura || "");
-    setHoraFechamento(quadra.horaFechamento || "");
+    setHoraAbertura((quadra.horaAbertura || "").substring(0, 5));
+    setHoraFechamento((quadra.horaFechamento || "").substring(0, 5));
     setAtiva(quadra.ativa);
+    setDiasFuncionamento(paraArrayDias(quadra.diasFuncionamento));
     setDuracaoReservaMinutos(
       quadra.duracaoReservaMinutos ?? ""
     );
@@ -137,6 +197,11 @@ export default function Quadras() {
           required("Informe a duração da reserva."),
         ]
       ),
+
+      diasFuncionamento:
+        diasFuncionamento.length === 0
+          ? "Selecione ao menos um dia de funcionamento."
+          : null,
 
       horaFechamento: validarCampo(horaFechamento, [
         required("Informe o horário de fechamento."),
@@ -177,6 +242,7 @@ export default function Quadras() {
         horaAbertura,
         horaFechamento,
         duracaoReservaMinutos: Number(duracaoReservaMinutos),
+        diasFuncionamento: diasFuncionamento.join(","),
       };
 
       if (quadraEditando) {
@@ -344,6 +410,12 @@ export default function Quadras() {
             label: "Fechamento",
           },
 
+          {
+            field: "diasFuncionamento",
+            label: "Dias",
+            render: (quadra) => resumoDias(quadra.diasFuncionamento),
+          },
+
           
           {
             field: "ativa",
@@ -445,36 +517,107 @@ export default function Quadras() {
             }}
           >
             <TextField
+              select
               label="Hora de abertura"
-              type="time"
               value={horaAbertura}
-              onChange={(event) =>
-                setHoraAbertura(event.target.value)
-              }
-              slotProps={{
-                inputLabel: {
-                  shrink: true,
-                },
+              onChange={(event) => {
+                const novaAbertura = event.target.value;
+
+                setHoraAbertura(novaAbertura);
+
+                if (horaFechamento && horaFechamento <= novaAbertura) {
+                  setHoraFechamento("");
+                }
               }}
+              slotProps={{ select: { MenuProps: MENU_HORARIOS } }}
               fullWidth
               required
-            />
+            >
+              {opcoesHorario(horaAbertura).map((hora) => (
+                <MenuItem key={hora} value={hora}>
+                  {hora}
+                </MenuItem>
+              ))}
+            </TextField>
 
             <TextField
+              select
               label="Hora de fechamento"
-              type="time"
               value={horaFechamento}
               onChange={(event) =>
                 setHoraFechamento(event.target.value)
               }
-              slotProps={{
-                inputLabel: {
-                  shrink: true,
-                },
-              }}
+              helperText={
+                horaAbertura
+                  ? `Depois das ${horaAbertura}`
+                  : "Escolha a abertura primeiro"
+              }
+              slotProps={{ select: { MenuProps: MENU_HORARIOS } }}
               fullWidth
               required
-            />
+            >
+              {opcoesHorario(horaFechamento)
+                .filter(
+                  (hora) =>
+                    !horaAbertura ||
+                    hora > horaAbertura ||
+                    hora === horaFechamento
+                )
+                .map((hora) => (
+                  <MenuItem key={hora} value={hora}>
+                    {hora}
+                  </MenuItem>
+                ))}
+            </TextField>
+          </Box>
+
+          <Box>
+            <Typography
+              sx={{ fontSize: 13, color: "#718096", mb: 1 }}
+            >
+              Dias de funcionamento
+            </Typography>
+
+            <ToggleButtonGroup
+              value={diasFuncionamento}
+              onChange={(_, novos) =>
+                setDiasFuncionamento(
+                  [...novos].sort((a, b) => a - b)
+                )
+              }
+              size="small"
+              color="success"
+              sx={{ flexWrap: "wrap" }}
+            >
+              {DIAS_SEMANA.map((dia) => (
+                <ToggleButton
+                  key={dia.valor}
+                  value={dia.valor}
+                  aria-label={dia.longo}
+                  sx={{ textTransform: "none", px: 1.5 }}
+                >
+                  {dia.curto}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+
+            <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+              <Button
+                size="small"
+                onClick={() => setDiasFuncionamento(TODOS_OS_DIAS)}
+                sx={{ textTransform: "none" }}
+              >
+                Todos os dias
+              </Button>
+
+              <Button
+                size="small"
+                onClick={() => setDiasFuncionamento([1, 2, 3, 4, 5])}
+                sx={{ textTransform: "none" }}
+              >
+                Seg a Sex
+              </Button>
+            </Box>
           </Box>
 
           <TextField
@@ -505,25 +648,15 @@ export default function Quadras() {
           </TextField>
 
 
-          <TextField
-            select
-            label="Status"
-            value={ativa ? "true" : "false"}
+          <StatusSwitch
+            checked={ativa}
             onChange={(event) =>
-              setAtiva(
-                event.target.value === "true"
-              )
+              setAtiva(event.target.checked)
             }
-            fullWidth
-          >
-            <MenuItem value="true">
-              Ativa
-            </MenuItem>
-
-            <MenuItem value="false">
-              Inativa
-            </MenuItem>
-          </TextField>
+            mostrarTexto
+            labelAtivo="Quadra ativa"
+            labelInativo="Quadra inativa"
+          />
 
           {erro && (
             <Typography color="error">

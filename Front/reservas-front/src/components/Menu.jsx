@@ -11,6 +11,7 @@ import {
   Button,
 } from "@mui/material";
 
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import SportsSoccerRoundedIcon from "@mui/icons-material/SportsSoccerRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
@@ -24,13 +25,17 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
   const { logout, usuario } = useAuth();
   const opcoes = [
     {
+      nome: "Dashboard",
+      icone: <DashboardRoundedIcon />,
+    },
+    {
       nome: "Quadras",
       icone: <SportsSoccerRoundedIcon />,
     },
-    {
-      nome: "Reservas",
-      icone: <EventRoundedIcon />,
-    },
+     {
+       nome: "Reservas",
+       icone: <EventRoundedIcon />,
+     },
     {
       nome: "Usuários",
       icone: <PeopleRoundedIcon />,

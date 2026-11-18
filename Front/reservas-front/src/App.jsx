@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Box } from "@mui/material";
 
 import Menu from "./components/Menu";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import Quadras from "./pages/Quadras/Quadras";
 import Usuarios from "./pages/Usuarios/Usuarios";
 import Reservas from "./pages/Reservas/Reservas";
@@ -13,7 +14,7 @@ import Cadastro from "./pages/Cadastro/Cadastro";
 const drawerWidth = 240;
 
 function App() {
-  const [paginaAtual, setPaginaAtual] = useState("Quadras");
+  const [paginaAtual, setPaginaAtual] = useState("Dashboard");
   const [telaLogin, setTelaLogin] = useState(true);
   const { autenticado } = useAuth();
 
@@ -27,6 +28,9 @@ function App() {
 
   const renderizarPagina = () => {
     switch (paginaAtual) {
+      case "Dashboard":
+        return <Dashboard />;
+
       case "Quadras":
         return <Quadras />;
 
