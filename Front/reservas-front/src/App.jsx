@@ -3,6 +3,7 @@ import { Box } from "@mui/material";
 
 import Menu from "./components/Menu";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import Agenda from "./pages/Agenda/Agenda";
 import Quadras from "./pages/Quadras/Quadras";
 import Usuarios from "./pages/Usuarios/Usuarios";
 import Reservas from "./pages/Reservas/Reservas";
@@ -30,6 +31,9 @@ function App() {
     switch (paginaAtual) {
       case "Dashboard":
         return <Dashboard />;
+
+      case "Agenda":
+        return <Agenda />;
 
       case "Quadras":
         return <Quadras />;

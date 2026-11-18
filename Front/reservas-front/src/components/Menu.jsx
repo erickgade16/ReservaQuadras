@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Box,
   Divider,
@@ -9,24 +11,61 @@ import {
   Typography,
   Avatar,
   Button,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import TodayRoundedIcon from "@mui/icons-material/TodayRounded";
 import SportsSoccerRoundedIcon from "@mui/icons-material/SportsSoccerRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { useAuth } from "../context/AuthContext";
 
 const drawerWidth = 260;
+const drawerWidthRecolhido = 76;
 
 export default function Menu({ paginaAtual, setPaginaAtual }) {
 
   const { logout, usuario } = useAuth();
+
+  // Menu recolhido (só ícones). A escolha fica salva no navegador.
+  const [recolhido, setRecolhido] = useState(() => {
+    try {
+      return localStorage.getItem("menuRecolhido") === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  function alternarMenu() {
+    setRecolhido((atual) => {
+      const novo = !atual;
+
+      try {
+        localStorage.setItem("menuRecolhido", novo ? "1" : "0");
+      } catch {
+        // sem armazenamento: o menu só não lembra a escolha
+      }
+
+      return novo;
+    });
+  }
+
+  const largura = recolhido ? drawerWidthRecolhido : drawerWidth;
+
   const opcoes = [
     {
       nome: "Dashboard",
       icone: <DashboardRoundedIcon />,
+    },
+    {
+      nome: "Agenda",
+      icone: <TodayRoundedIcon />,
     },
     {
       nome: "Quadras",
@@ -46,12 +85,15 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
     <Drawer
       variant="permanent"
       sx={{
-        width: drawerWidth,
+        width: largura,
         flexShrink: 0,
+        transition: "width 200ms ease",
 
         "& .MuiDrawer-paper": {
-          width: drawerWidth,
+          width: largura,
           boxSizing: "border-box",
+          overflowX: "hidden",
+          transition: "width 200ms ease",
 
           // Verde escuro
           backgroundColor: "#123524",
@@ -61,14 +103,31 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
         },
       }}
     >
-      {/* LOGO */}
+      {/* LOGO (clique volta para o Dashboard) */}
       <Box
+        role="button"
+        tabIndex={0}
+        aria-label="Ir para o Dashboard"
+        onClick={() => setPaginaAtual("Dashboard")}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setPaginaAtual("Dashboard");
+          }
+        }}
         sx={{
           height: 72,
           display: "flex",
           alignItems: "center",
-          px: 3,
+          px: recolhido ? 0 : 3,
+          justifyContent: recolhido ? "center" : "flex-start",
           gap: 1.5,
+          cursor: "pointer",
+          outline: "none",
+
+          "&:focus-visible": {
+            backgroundColor: "#1b4d34",
+          },
         }}
       >
         <Box
@@ -85,6 +144,7 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
           <CalendarMonthRoundedIcon />
         </Box>
 
+        {!recolhido && (
         <Box>
           <Typography
             sx={{
@@ -105,16 +165,52 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
             Quadras
           </Typography>
         </Box>
+        )}
       </Box>
 
       <Divider sx={{ borderColor: "#1b4d34" }} />
 
+      {/* RECOLHER / EXPANDIR */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: recolhido ? "center" : "flex-end",
+          px: recolhido ? 0 : 2,
+          pt: 1.5,
+        }}
+      >
+        <Tooltip
+          title={recolhido ? "Expandir menu" : "Recolher menu"}
+          placement="right"
+        >
+          <IconButton
+            onClick={alternarMenu}
+            aria-label={recolhido ? "Expandir menu" : "Recolher menu"}
+            size="small"
+            sx={{
+              color: "#b4c8bb",
+              "&:hover": {
+                color: "#fff",
+                backgroundColor: "#1b4d34",
+              },
+            }}
+          >
+            {recolhido ? (
+              <ChevronRightRoundedIcon />
+            ) : (
+              <ChevronLeftRoundedIcon />
+            )}
+          </IconButton>
+        </Tooltip>
+      </Box>
+
       {/* NAVEGAÇÃO */}
-      <Box sx={{ px: 2, pt: 3 }}>
+      <Box sx={{ px: recolhido ? 1.25 : 2, pt: 1.5 }}>
         <Typography
           sx={{
             px: 1.5,
             mb: 1,
+            display: recolhido ? "none" : "block",
             fontSize: 11,
             fontWeight: 600,
             color: "#7fa58e",
@@ -130,19 +226,25 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
             const selecionado = paginaAtual === opcao.nome;
 
             return (
-              <ListItemButton
+              <Tooltip
                 key={opcao.nome}
+                title={recolhido ? opcao.nome : ""}
+                placement="right"
+              >
+              <ListItemButton
                 selected={selecionado}
                 onClick={() => setPaginaAtual(opcao.nome)}
                 sx={{
                   mb: 0.5,
                   borderRadius: 2,
                   minHeight: 46,
+                  justifyContent: recolhido ? "center" : "flex-start",
+                  px: recolhido ? 0 : 2,
 
                   color: selecionado ? "#fff" : "#b4c8bb",
 
                   "& .MuiListItemIcon-root": {
-                    minWidth: 40,
+                    minWidth: recolhido ? 0 : 40,
                     color: selecionado ? "#fff" : "#88aa96",
                   },
 
@@ -173,6 +275,7 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
                   {opcao.icone}
                 </ListItemIcon>
 
+                {!recolhido && (
                 <ListItemText
                   primary={opcao.nome}
                   primaryTypographyProps={{
@@ -180,7 +283,9 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
                     fontWeight: selecionado ? 600 : 500,
                   }}
                 />
+                )}
               </ListItemButton>
+              </Tooltip>
             );
           })}
         </List>
@@ -192,10 +297,11 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
 
         <Box
           sx={{
-            p: 2,
+            p: recolhido ? 1.5 : 2,
             display: "flex",
+            flexDirection: recolhido ? "column" : "row",
             alignItems: "center",
-            gap: 1.5,
+            gap: recolhido ? 1 : 1.5,
           }}
         >
           <Avatar
@@ -207,9 +313,10 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
               fontWeight: 600,
             }}
           >
-            U
+            {(usuario?.nome?.trim()?.[0] || "U").toUpperCase()}
           </Avatar>
 
+          {!recolhido && (
           <Box sx={{ minWidth: 0 }}>
             <Typography
               noWrap
@@ -231,7 +338,26 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
               Sistema
             </Typography>
           </Box>
+          )}
 
+          {recolhido ? (
+            <Tooltip title="Sair" placement="right">
+              <IconButton
+                onClick={logout}
+                aria-label="Sair"
+                size="small"
+                sx={{
+                  color: "#b4c8bb",
+                  "&:hover": {
+                    color: "#fff",
+                    backgroundColor: "#1b4d34",
+                  },
+                }}
+              >
+                <LogoutRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : (
           <Button
             onClick={logout}
             sx={{
@@ -246,6 +372,7 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
           >
             Logout
           </Button>
+          )}
         </Box>
       </Box>
     </Drawer>
