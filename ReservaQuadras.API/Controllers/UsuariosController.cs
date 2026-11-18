@@ -24,6 +24,32 @@ public class UsuariosController : ControllerBase
     {
         var usuarios = await _usuarioService.ListarAsync();
 
+        // Não devolve a entidade inteira: a senha (hash) não deve sair da API
+        return Ok(usuarios.Select(UsuarioListaItem.De));
+    }
+
+    // Lista paginada: ?pagina=1&tamanho=10&busca=&ativo=&ordenarPor=&direcao=
+    [HttpGet("paginado")]
+    [Authorize]
+    public async Task<IActionResult> GetPaginado(
+        [FromQuery] ConsultaPaginada consulta)
+    {
+        var resultado =
+            await _usuarioService.ListarPaginadoAsync(consulta);
+
+        return Ok(resultado);
+    }
+
+    // Busca para o campo de seleção de usuário (ativos, até "limite" resultados)
+    [HttpGet("buscar")]
+    [Authorize]
+    public async Task<IActionResult> Buscar(
+        [FromQuery] string? termo,
+        [FromQuery] int limite = 20)
+    {
+        var usuarios =
+            await _usuarioService.BuscarParaSelecaoAsync(termo, limite);
+
         return Ok(usuarios);
     }
 

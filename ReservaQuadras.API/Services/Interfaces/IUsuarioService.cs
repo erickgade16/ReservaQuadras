@@ -7,6 +7,13 @@ public interface IUsuarioService
 {
     Task<List<Usuario>> ListarAsync();
 
+    Task<PaginadoResponse<UsuarioListaItem>> ListarPaginadoAsync(
+        ConsultaPaginada consulta);
+
+    Task<List<UsuarioListaItem>> BuscarParaSelecaoAsync(
+        string? termo,
+        int limite);
+
     Task<Usuario> CriarAsync(Usuario usuario);
 
     Task<Usuario> CriarRapidoAsync(CriarUsuarioRapidoRequest request);

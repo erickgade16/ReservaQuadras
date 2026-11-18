@@ -19,7 +19,6 @@ import TodayRoundedIcon from "@mui/icons-material/TodayRounded";
 import SportsSoccerRoundedIcon from "@mui/icons-material/SportsSoccerRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
-import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -78,10 +77,6 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
     {
       nome: "Usuários",
       icone: <PeopleRoundedIcon />,
-    },
-    {
-      nome: "Perfil",
-      icone: <AccountCircleRoundedIcon />,
     },
   ];
 
@@ -308,32 +303,68 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
             gap: recolhido ? 1 : 1.5,
           }}
         >
-          <Avatar
-            sx={{
-              width: 38,
-              height: 38,
-              backgroundColor: "#198754",
-              fontSize: 14,
-              fontWeight: 600,
-            }}
-          >
-            {(usuario?.nome?.trim()?.[0] || "U").toUpperCase()}
-          </Avatar>
-
-          {!recolhido && (
-          <Box sx={{ minWidth: 0, flexGrow: 1 }}>
-            <Typography
-              noWrap
+          {/* FOTO / NOME (clique abre o Perfil) */}
+          <Tooltip title="Meu perfil" placement="right">
+            <Box
+              role="button"
+              tabIndex={0}
+              aria-label="Abrir meu perfil"
+              onClick={() => setPaginaAtual("Perfil")}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setPaginaAtual("Perfil");
+                }
+              }}
               sx={{
-                fontSize: 14,
-                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: recolhido ? "center" : "flex-start",
+                gap: 1.5,
+                minWidth: 0,
+                flexGrow: recolhido ? 0 : 1,
+                p: 0.75,
+                borderRadius: 2,
+                cursor: "pointer",
+                outline: "none",
+                backgroundColor:
+                  paginaAtual === "Perfil" ? "#1b4d34" : "transparent",
+
+                "&:hover, &:focus-visible": {
+                  backgroundColor: "#1b4d34",
+                },
               }}
             >
-              {usuario?.nome || "Usuário"}
-            </Typography>
+              <Avatar
+                sx={{
+                  width: 38,
+                  height: 38,
+                  backgroundColor: "#198754",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  border:
+                    paginaAtual === "Perfil"
+                      ? "2px solid #7ee2a8"
+                      : "2px solid transparent",
+                }}
+              >
+                {(usuario?.nome?.trim()?.[0] || "U").toUpperCase()}
+              </Avatar>
 
-          </Box>
-          )}
+              {!recolhido && (
+                <Typography
+                  noWrap
+                  sx={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    minWidth: 0,
+                  }}
+                >
+                  {usuario?.nome || "Usuário"}
+                </Typography>
+              )}
+            </Box>
+          </Tooltip>
 
           <Tooltip title="Sair" placement="right">
             <IconButton

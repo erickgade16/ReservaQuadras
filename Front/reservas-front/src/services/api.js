@@ -369,3 +369,83 @@ export async function redefinirSenha(dados) {
 
   return await response.json();
 }
+
+// =========================
+// PAGINAÇÃO, BUSCA E RESUMO
+// =========================
+
+function montarQuery(params = {}) {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([chave, valor]) => {
+    if (valor !== undefined && valor !== null && valor !== "") {
+      query.append(chave, String(valor));
+    }
+  });
+
+  const texto = query.toString();
+
+  return texto ? `?${texto}` : "";
+}
+
+async function buscarJson(caminho, mensagemPadrao, params, signal) {
+  const response = await fetch(
+    `${API_URL}${caminho}${montarQuery(params)}`,
+    {
+      headers: obterHeaders(),
+      signal,
+    }
+  );
+
+  if (!response.ok) {
+    await tratarErroResponse(response, mensagemPadrao);
+  }
+
+  return response.json();
+}
+
+// Devolve { itens, total, pagina, tamanhoPagina, totalPaginas }
+export function buscarReservasPaginado(params) {
+  return buscarJson(
+    "/Reservas/paginado",
+    "Não foi possível buscar as reservas.",
+    params
+  );
+}
+
+// Reservas ativas de um dia (data no formato yyyy-MM-dd)
+export function buscarReservasPorData(data) {
+  return buscarJson(
+    "/Reservas/por-data",
+    "Não foi possível buscar as reservas do dia.",
+    { data }
+  );
+}
+
+// Devolve { itens, total, pagina, tamanhoPagina, totalPaginas }
+export function buscarUsuariosPaginado(params) {
+  return buscarJson(
+    "/Usuarios/paginado",
+    "Não foi possível buscar os usuários.",
+    params
+  );
+}
+
+// Usuários ativos que combinam com o termo (nome ou e-mail), no máximo "limite"
+export function buscarUsuariosParaSelecao(termo, limite = 20, signal) {
+  return buscarJson(
+    "/Usuarios/buscar",
+    "Não foi possível buscar os usuários.",
+    { termo, limite },
+    signal
+  );
+}
+
+// "agora" no formato yyyy-MM-ddTHH:mm:ss (horário local do navegador)
+export function buscarResumoDashboard(agora) {
+  return buscarJson(
+    "/Dashboard/resumo",
+    "Não foi possível carregar o dashboard.",
+    { agora }
+  );
+}

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
+  Alert,
   Box,
   Button,
   TextField,
@@ -7,7 +8,7 @@ import {
 } from "@mui/material";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import {
-  buscarUsuarios,
+  buscarUsuariosPaginado,
   criarUsuario,
   editarUsuario,
   alterarStatusUsuario,
@@ -23,10 +24,32 @@ import {
 import StatusSwitch from "../../components/StatusSwitch";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import AppSnackbar from "../../components/AppSnackbar";
+import useListaPaginada from "../../utils/useListaPaginada";
 
 export default function Usuarios() {
-  const [usuarios, setUsuarios] = useState([]);
-  const [carregando, setCarregando] = useState(true);
+  // Lista paginada no servidor (busca, filtro de status e ordenação também)
+  const {
+    itens: usuarios,
+    setItens: setUsuarios,
+    carregando,
+    erro: erroLista,
+    recarregar: carregarUsuarios,
+    servidor,
+  } = useListaPaginada(
+    ({ pagina, tamanho, busca, filtros, ordenacao, direcao }) =>
+      buscarUsuariosPaginado({
+        pagina,
+        tamanho,
+        busca,
+        ativo:
+          filtros.ativo === undefined || filtros.ativo === "todos"
+            ? undefined
+            : filtros.ativo,
+        ordenarPor: ordenacao,
+        direcao,
+      })
+  );
+
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [formularioAberto, setFormularioAberto] = useState(false);
@@ -40,34 +63,6 @@ export default function Usuarios() {
   const [snackbarAberto, setSnackbarAberto] = useState(false);
   const [snackbarMensagem, setSnackbarMensagem] = useState("");
   const [snackbarSeveridade, setSnackbarSeveridade] = useState("success");
-
-  useEffect(() => {
-    carregarUsuarios();
-  }, []);
-
-  async function carregarUsuarios() {
-    try {
-      setCarregando(true);
-      setErro("");
-
-      const dados = await buscarUsuarios();
-
-      if (Array.isArray(dados)) {
-        setUsuarios(dados);
-      } else if (Array.isArray(dados?.data)) {
-        setUsuarios(dados.data);
-      } else {
-        console.error("Formato inesperado da API:", dados);
-        setUsuarios([]);
-      }
-    } catch (error) {
-      console.error(error);
-      setErro(error.message);
-      setUsuarios([]);
-    } finally {
-      setCarregando(false);
-    }
-  }
 
   function limparFormulario() {
     setNome("");
@@ -242,6 +237,12 @@ export default function Usuarios() {
 
   return (
     <Box>
+      {erroLista && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {erroLista}
+        </Alert>
+      )}
+
       <PageTable
         titulo="Usuários"
         descricao="Visualize os usuários e edite nome e e-mail."
@@ -335,7 +336,8 @@ export default function Usuarios() {
         ]}
         rows={usuarios}
         loading={carregando}
-        emptyMessage="Nenhum usuário cadastrado."
+        servidor={servidor}
+        emptyMessage="Nenhum usuário encontrado."
       />
 
       <FormDialog

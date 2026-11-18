@@ -23,6 +23,32 @@ public class UsuarioService : IUsuarioService
         return await _usuarioRepository.ListarAsync();
     }
 
+    public async Task<PaginadoResponse<UsuarioListaItem>> ListarPaginadoAsync(
+        ConsultaPaginada consulta)
+    {
+        var (itens, total) =
+            await _usuarioRepository.ListarPaginadoAsync(consulta);
+
+        return PaginadoResponse<UsuarioListaItem>.Criar(
+            itens.Select(UsuarioListaItem.De).ToList(),
+            total,
+            consulta);
+    }
+
+    public async Task<List<UsuarioListaItem>> BuscarParaSelecaoAsync(
+        string? termo,
+        int limite)
+    {
+        var limiteSeguro = Math.Clamp(limite, 1, 50);
+
+        var usuarios =
+            await _usuarioRepository.BuscarParaSelecaoAsync(
+                termo,
+                limiteSeguro);
+
+        return usuarios.Select(UsuarioListaItem.De).ToList();
+    }
+
     public async Task<Usuario> CriarAsync(Usuario usuario)
     {
         var emailExiste = await _usuarioRepository

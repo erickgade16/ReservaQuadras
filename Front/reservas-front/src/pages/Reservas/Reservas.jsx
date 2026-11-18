@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Box,
   Button,
   MenuItem,
@@ -12,8 +13,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { ptBR } from "date-fns/locale";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import {
-  buscarReservas,
-  buscarUsuarios,
+  buscarReservasPaginado,
   buscarQuadras,
   criarReserva,
   buscarHorariosDisponiveis,
@@ -33,13 +33,34 @@ import {
 import ConfirmDialog from "../../components/ConfirmDialog";
 import AppSnackbar from "../../components/AppSnackbar";
 import NovoUsuarioDialog from "../../components/NovoUsuarioDialog";
+import UsuarioAutocomplete from "../../components/UsuarioAutocomplete";
+import useListaPaginada from "../../utils/useListaPaginada";
 
 export default function Reservas() {
-  const [reservas, setReservas] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
-  const [quadras, setQuadras] = useState([]);
+  // Lista paginada no servidor (busca, filtro de status e ordenação também)
+  const {
+    itens: reservas,
+    setItens: setReservas,
+    carregando,
+    erro: erroLista,
+    recarregar: carregarReservas,
+    servidor,
+  } = useListaPaginada(
+    ({ pagina, tamanho, busca, filtros, ordenacao, direcao }) =>
+      buscarReservasPaginado({
+        pagina,
+        tamanho,
+        busca,
+        ativo:
+          filtros.ativo === undefined || filtros.ativo === "todos"
+            ? undefined
+            : filtros.ativo,
+        ordenarPor: ordenacao,
+        direcao,
+      })
+  );
 
-  const [carregando, setCarregando] = useState(true);
+  const [quadras, setQuadras] = useState([]);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -47,6 +68,7 @@ export default function Reservas() {
   const [reservaEditando, setReservaEditando] = useState(null);
 
   const [usuarioId, setUsuarioId] = useState("");
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
   const [quadraId, setQuadraId] = useState("");
   const [dataReserva, setDataReserva] = useState("");
   const [horaInicio, setHoraInicio] = useState("");
@@ -65,38 +87,16 @@ export default function Reservas() {
 
 
   useEffect(() => {
-    carregarReservas();
-    carregarDadosFormulario();
+    carregarQuadras();
+  }, []);
+
+  useEffect(() => {
     carregarHorariosDisponiveis();
   }, [quadraId, dataReserva]);
 
-  async function carregarReservas() {
+  async function carregarQuadras() {
     try {
-      setCarregando(true);
-      setErro("");
-
-      const dados = await buscarReservas();
-
-
-
-      setReservas(dados);
-    } catch (error) {
-      console.error(error);
-      setErro(error.message);
-    } finally {
-      setCarregando(false);
-    }
-  }
-
-  async function carregarDadosFormulario() {
-    try {
-      const [usuariosData, quadrasData] = await Promise.all([
-        buscarUsuarios(),
-        buscarQuadras(),
-      ]);
-
-      setUsuarios(usuariosData);
-      setQuadras(quadrasData);
+      setQuadras(await buscarQuadras());
     } catch (error) {
       console.error(error);
       setErro(error.message);
@@ -105,6 +105,7 @@ export default function Reservas() {
 
   function limparFormulario() {
     setUsuarioId("");
+    setUsuarioSelecionado(null);
     setQuadraId("");
     setDataReserva("");
     setHoraInicio("");
@@ -125,6 +126,7 @@ export default function Reservas() {
     setReservaEditando(reserva);
 
     setUsuarioId(String(reserva.usuarioId));
+    setUsuarioSelecionado(reserva.usuario ?? null);
     setQuadraId(String(reserva.quadraId));
 
     setDataReserva(
@@ -388,6 +390,12 @@ export default function Reservas() {
 
   return (
     <Box>
+      {erroLista && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {erroLista}
+        </Alert>
+      )}
+
       <PageTable
         titulo="Reservas"
         descricao="Gerencie as reservas das quadras."
@@ -396,18 +404,17 @@ export default function Reservas() {
 
         search={{
           enabled: true,
-          placeholder: "Buscar por usuário ou quadra...",
-          fields: ["usuario.nome", "quadra.nome"],
+          placeholder: "Buscar por usuário, e-mail ou quadra...",
         }}
 
         filters={[
           {
-            field: "status",
+            field: "ativo",
             label: "Status",
             options: [
               { value: "todos", label: "Todos" },
-              { value: "Confirmada", label: "Confirmadas" },
-              { value: "Cancelada", label: "Canceladas" },
+              { value: true, label: "Ativas" },
+              { value: false, label: "Canceladas" },
             ],
           },
         ]}
@@ -417,7 +424,7 @@ export default function Reservas() {
           { field: "horaInicio", label: "Horário" },
           { field: "usuario.nome", label: "Usuário" },
           { field: "quadra.nome", label: "Quadra" },
-          { field: "status", label: "Status" },
+          { field: "ativo", label: "Status" },
         ]}
         columns={[
           {
@@ -510,7 +517,8 @@ export default function Reservas() {
         ]}
         rows={reservas}
         loading={carregando}
-        emptyMessage="Nenhuma reserva cadastrada."
+        servidor={servidor}
+        emptyMessage="Nenhuma reserva encontrada."
       />
 
       <FormDialog
@@ -533,28 +541,14 @@ export default function Reservas() {
             pt: 1,
           }}
         >
-          {/* USUÁRIO */}
-          <TextField
-            select
-            label="Usuário"
-            value={usuarioId}
-            onChange={(event) =>
-              setUsuarioId(event.target.value)
-            }
-            fullWidth
-            required
-          >
-            {usuarios
-              .filter((usuario) => usuario.ativo)
-              .map((usuario) => (
-                <MenuItem
-                  key={usuario.id}
-                  value={usuario.id}
-                >
-                  {usuario.nome}
-                </MenuItem>
-              ))}
-          </TextField>
+          {/* USUÁRIO (busca no servidor por nome ou e-mail) */}
+          <UsuarioAutocomplete
+            value={usuarioSelecionado}
+            onChange={(usuario) => {
+              setUsuarioSelecionado(usuario);
+              setUsuarioId(usuario ? String(usuario.id) : "");
+            }}
+          />
 
           <Button
             type="button"
@@ -575,8 +569,8 @@ export default function Reservas() {
             open={novoUsuarioAberto}
             onClose={() => setNovoUsuarioAberto(false)}
             onCriado={(novo) => {
-              setUsuarios((atuais) => [...atuais, novo]);
-              setUsuarioId(novo.id);
+              setUsuarioSelecionado(novo);
+              setUsuarioId(String(novo.id));
               setNovoUsuarioAberto(false);
               mostrarSnackbar("Usuário criado com sucesso!");
             }}

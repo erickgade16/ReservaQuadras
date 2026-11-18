@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
-  Autocomplete,
   Box,
   Button,
   CircularProgress,
   IconButton,
   Paper,
-  TextField,
   Typography,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -22,11 +20,11 @@ import PageHeader from "../../components/PageHeader";
 import FormDialog from "../../components/FormDialog";
 import AppSnackbar from "../../components/AppSnackbar";
 import NovoUsuarioDialog from "../../components/NovoUsuarioDialog";
+import UsuarioAutocomplete from "../../components/UsuarioAutocomplete";
 import {
   buscarHorariosDisponiveis,
   buscarQuadras,
-  buscarReservas,
-  buscarUsuarios,
+  buscarReservasPorData,
   criarReserva,
 } from "../../services/api";
 
@@ -48,7 +46,6 @@ function soData(dataReserva) {
 export default function Agenda() {
   const [data, setData] = useState(new Date());
   const [quadras, setQuadras] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
   const [reservas, setReservas] = useState([]);
   const [horariosPorQuadra, setHorariosPorQuadra] = useState({});
 
@@ -57,7 +54,7 @@ export default function Agenda() {
   const [recarregar, setRecarregar] = useState(0);
 
   const [slotSelecionado, setSlotSelecionado] = useState(null);
-  const [usuarioId, setUsuarioId] = useState("");
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [erroDialog, setErroDialog] = useState("");
   const [novoUsuarioAberto, setNovoUsuarioAberto] = useState(false);
@@ -75,10 +72,10 @@ export default function Agenda() {
         setCarregando(true);
         setErro("");
 
-        const [quadrasData, usuariosData, reservasData] = await Promise.all([
+        // Só as reservas do dia exibido (não todas as reservas do sistema)
+        const [quadrasData, reservasData] = await Promise.all([
           buscarQuadras(),
-          buscarUsuarios(),
-          buscarReservas(),
+          buscarReservasPorData(dataTexto),
         ]);
 
         const ativas = quadrasData.filter((q) => q.ativa);
@@ -98,7 +95,6 @@ export default function Agenda() {
         });
 
         setQuadras(ativas);
-        setUsuarios(usuariosData);
         setReservas(reservasData);
         setHorariosPorQuadra(mapa);
       } catch (error) {
@@ -116,11 +112,6 @@ export default function Agenda() {
       cancelado = true;
     };
   }, [dataTexto, recarregar]);
-
-  const usuariosDisponiveis = useMemo(
-    () => usuarios.filter((u) => u.ativo && !u.bloqueado),
-    [usuarios]
-  );
 
   const agora = new Date();
   const hojeTexto = format(agora, "yyyy-MM-dd");
@@ -156,7 +147,7 @@ export default function Agenda() {
 
   function abrirReserva(quadra, slot) {
     setSlotSelecionado({ quadra, slot });
-    setUsuarioId("");
+    setUsuarioSelecionado(null);
     setErroDialog("");
   }
 
@@ -169,7 +160,7 @@ export default function Agenda() {
   async function confirmarReserva() {
     if (salvando || !slotSelecionado) return;
 
-    if (!usuarioId) {
+    if (!usuarioSelecionado) {
       setErroDialog("Selecione o usuário da reserva.");
       return;
     }
@@ -179,7 +170,7 @@ export default function Agenda() {
       setErroDialog("");
 
       await criarReserva({
-        usuarioId: Number(usuarioId),
+        usuarioId: usuarioSelecionado.id,
         quadraId: slotSelecionado.quadra.id,
         dataReserva: dataTexto,
         horaInicio: `${hhmm(slotSelecionado.slot.horaInicio)}:00`,
@@ -416,48 +407,9 @@ export default function Agenda() {
               </Typography>
             </Box>
 
-            <Autocomplete
-              options={usuariosDisponiveis}
-              value={
-                usuariosDisponiveis.find(
-                  (u) => String(u.id) === usuarioId
-                ) ?? null
-              }
-              onChange={(_, usuario) =>
-                setUsuarioId(usuario ? String(usuario.id) : "")
-              }
-              getOptionLabel={(usuario) =>
-                `${usuario.nome} (${usuario.email})`
-              }
-              isOptionEqualToValue={(opcao, valor) => opcao.id === valor.id}
-              noOptionsText="Nenhum usuário encontrado"
-              renderOption={(props, usuario) => {
-                const { key, ...resto } = props;
-
-                return (
-                  <Box component="li" key={key} {...resto}>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={{ fontWeight: 600 }} noWrap>
-                        {usuario.nome}
-                      </Typography>
-                      <Typography
-                        sx={{ color: "#718096", fontSize: 13 }}
-                        noWrap
-                      >
-                        {usuario.email}
-                      </Typography>
-                    </Box>
-                  </Box>
-                );
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Usuário (busque por nome ou e-mail)"
-                  required
-                />
-              )}
-              fullWidth
+            <UsuarioAutocomplete
+              value={usuarioSelecionado}
+              onChange={setUsuarioSelecionado}
             />
 
             <Button
@@ -479,8 +431,7 @@ export default function Agenda() {
               open={novoUsuarioAberto}
               onClose={() => setNovoUsuarioAberto(false)}
               onCriado={(novo) => {
-                setUsuarios((atuais) => [...atuais, novo]);
-                setUsuarioId(String(novo.id));
+                setUsuarioSelecionado(novo);
                 setNovoUsuarioAberto(false);
               }}
             />

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ReservaQuadras.API.DTOs;
 using ReservaQuadras.API.Entities;
 using ReservaQuadras.API.Services;
 
@@ -21,6 +22,29 @@ public class ReservasController : ControllerBase
     public async Task<IActionResult> Get()
     {
         var reservas = await _reservaService.ListarAsync();
+
+        // Mesmo formato do /paginado: não devolve dados sensíveis do usuário
+        return Ok(reservas.Select(ReservaListaItem.De));
+    }
+
+    // Lista paginada: ?pagina=1&tamanho=10&busca=&ativo=&quadraId=&data=&ordenarPor=&direcao=
+    [HttpGet("paginado")]
+    public async Task<IActionResult> GetPaginado(
+        [FromQuery] ConsultaReservas consulta)
+    {
+        var resultado =
+            await _reservaService.ListarPaginadoAsync(consulta);
+
+        return Ok(resultado);
+    }
+
+    // Reservas ativas de um dia (usado pela Agenda)
+    [HttpGet("por-data")]
+    public async Task<IActionResult> GetPorData(
+        [FromQuery] DateTime data)
+    {
+        var reservas =
+            await _reservaService.ListarPorDataAsync(data);
 
         return Ok(reservas);
     }

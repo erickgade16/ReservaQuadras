@@ -1,4 +1,5 @@
-﻿using ReservaQuadras.API.Entities;
+﻿using ReservaQuadras.API.DTOs;
+using ReservaQuadras.API.Entities;
 using ReservaQuadras.API.Repositories;
 
 namespace ReservaQuadras.API.Services;
@@ -22,6 +23,27 @@ public class ReservaService : IReservaService
     public async Task<List<Reserva>> ListarAsync()
     {
         return await _reservaRepository.ListarAsync();
+    }
+
+    public async Task<PaginadoResponse<ReservaListaItem>> ListarPaginadoAsync(
+        ConsultaReservas consulta)
+    {
+        var (itens, total) =
+            await _reservaRepository.ListarPaginadoAsync(consulta);
+
+        return PaginadoResponse<ReservaListaItem>.Criar(
+            itens.Select(ReservaListaItem.De).ToList(),
+            total,
+            consulta);
+    }
+
+    public async Task<List<ReservaListaItem>> ListarPorDataAsync(
+        DateTime data)
+    {
+        var reservas =
+            await _reservaRepository.ListarPorDataAsync(data);
+
+        return reservas.Select(ReservaListaItem.De).ToList();
     }
 
     public async Task<Reserva> CriarAsync(Reserva reserva)

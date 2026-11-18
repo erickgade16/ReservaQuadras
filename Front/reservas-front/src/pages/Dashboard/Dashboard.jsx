@@ -7,23 +7,12 @@ import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import PaidRoundedIcon from "@mui/icons-material/PaidRounded";
 
 import PageHeader from "../../components/PageHeader";
-import {
-  buscarReservas,
-  buscarQuadras,
-  buscarUsuarios,
-} from "../../services/api";
+import { buscarResumoDashboard } from "../../services/api";
 
 const moeda = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
-
-// "18:30:00" -> 1110 (minutos desde 00:00)
-function paraMinutos(hora) {
-  if (!hora) return 0;
-  const [h, m] = hora.split(":");
-  return Number(h) * 60 + Number(m || 0);
-}
 
 // "2026-11-18T00:00:00" -> "2026-11-18"
 function soData(dataReserva) {
@@ -107,9 +96,7 @@ function Painel({ titulo, children }) {
 }
 
 export default function Dashboard() {
-  const [reservas, setReservas] = useState([]);
-  const [quadras, setQuadras] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
+  const [dados, setDados] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
@@ -119,15 +106,12 @@ export default function Dashboard() {
         setCarregando(true);
         setErro("");
 
-        const [reservasData, quadrasData, usuariosData] = await Promise.all([
-          buscarReservas(),
-          buscarQuadras(),
-          buscarUsuarios(),
-        ]);
-
-        setReservas(reservasData);
-        setQuadras(quadrasData);
-        setUsuarios(usuariosData);
+        // Os números são calculados no servidor (contagens e somas no banco)
+        setDados(
+          await buscarResumoDashboard(
+            format(new Date(), "yyyy-MM-dd'T'HH:mm:ss")
+          )
+        );
       } catch (error) {
         console.error(error);
         setErro(error.message);
@@ -140,74 +124,33 @@ export default function Dashboard() {
   }, []);
 
   const resumo = useMemo(() => {
-    const agora = new Date();
-    const hoje = format(agora, "yyyy-MM-dd");
-    const mesAtual = format(agora, "yyyy-MM");
-    const agoraTexto = format(agora, "yyyy-MM-dd HH:mm");
-
-    const ativas = reservas.filter((r) => r.ativo);
-    const precoPorQuadra = new Map(
-      quadras.map((q) => [q.id, Number(q.precoHora) || 0])
-    );
-
-    const reservasHoje = ativas.filter((r) => soData(r.dataReserva) === hoje);
-    const reservasMes = ativas.filter((r) =>
-      soData(r.dataReserva).startsWith(mesAtual)
-    );
-
-    const receitaMes = reservasMes.reduce((total, r) => {
-      const horas =
-        (paraMinutos(r.horaFim) - paraMinutos(r.horaInicio)) / 60;
-      const preco = precoPorQuadra.get(r.quadraId) ?? 0;
-      return total + Math.max(horas, 0) * preco;
-    }, 0);
-
-    const proximas = ativas
-      .filter(
-        (r) =>
-          `${soData(r.dataReserva)} ${(r.horaInicio || "").substring(0, 5)}` >=
-          agoraTexto
-      )
-      .sort((a, b) =>
-        `${soData(a.dataReserva)} ${a.horaInicio}`.localeCompare(
-          `${soData(b.dataReserva)} ${b.horaInicio}`
-        )
-      )
-      .slice(0, 5);
-
-    const contagemPorQuadra = new Map();
-    reservasMes.forEach((r) => {
-      contagemPorQuadra.set(
-        r.quadraId,
-        (contagemPorQuadra.get(r.quadraId) || 0) + 1
-      );
-    });
-
-    const ranking = quadras
-      .map((q) => ({
-        id: q.id,
-        nome: q.nome,
-        total: contagemPorQuadra.get(q.id) || 0,
-      }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
+    if (!dados) return null;
 
     return {
-      reservasHoje: reservasHoje.length,
-      reservasMes: reservasMes.length,
-      quadrasAtivas: quadras.filter((q) => q.ativa).length,
-      usuariosAtivos: usuarios.filter((u) => u.ativo && !u.bloqueado).length,
-      receitaMes,
-      proximas,
-      ranking,
-      maiorTotal: Math.max(1, ...ranking.map((q) => q.total)),
+      ...dados,
+      maiorTotal: Math.max(1, ...dados.ranking.map((q) => q.total)),
     };
-  }, [reservas, quadras, usuarios]);
+  }, [dados]);
 
   if (carregando) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
         <CircularProgress sx={{ color: "#198754" }} />
+      </Box>
+    );
+  }
+
+  if (!resumo) {
+    return (
+      <Box>
+        <PageHeader
+          titulo="Dashboard"
+          descricao="Resumo das reservas, quadras e usuários"
+        />
+
+        <Alert severity="error" sx={{ mx: 3 }}>
+          {erro || "Não foi possível carregar o dashboard."}
+        </Alert>
       </Box>
     );
   }
@@ -246,14 +189,14 @@ export default function Dashboard() {
             titulo="Quadras ativas"
             valor={resumo.quadrasAtivas}
             icone={<SportsSoccerRoundedIcon />}
-            detalhe={`${quadras.length} cadastradas`}
+            detalhe={`${resumo.quadrasTotal} cadastradas`}
           />
 
           <CardResumo
             titulo="Usuários ativos"
             valor={resumo.usuariosAtivos}
             icone={<PeopleRoundedIcon />}
-            detalhe={`${usuarios.length} cadastrados`}
+            detalhe={`${resumo.usuariosTotal} cadastrados`}
           />
 
           <CardResumo

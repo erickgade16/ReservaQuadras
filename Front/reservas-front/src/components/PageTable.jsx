@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   FormControl,
@@ -6,6 +6,7 @@ import {
   MenuItem,
   Paper,
   Select,
+  TablePagination,
   TextField,
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -32,11 +33,42 @@ export default function PageTable({
 
   // Ordenação
   sortOptions = [],
+
+  // Modo servidor (paginação, busca, filtros e ordenação feitos na API):
+  // { total, pagina (0-based), tamanho, onPaginaChange, onTamanhoChange, onConsultaChange }
+  servidor,
 }) {
   const [busca, setBusca] = useState("");
   const [filtros, setFiltros] = useState({});
   const [ordenacao, setOrdenacao] = useState("");
   const [direcao, setDirecao] = useState("asc");
+
+  const servidorRef = useRef(servidor);
+  servidorRef.current = servidor;
+  const ultimaConsulta = useRef(null);
+
+  // No modo servidor, avisa a página quando busca/filtros/ordenação mudam (com espera
+  // enquanto a pessoa digita). A primeira execução só registra o estado inicial.
+  useEffect(() => {
+    if (!servidorRef.current?.onConsultaChange) return undefined;
+
+    const consulta = { busca: busca.trim(), filtros, ordenacao, direcao };
+    const chave = JSON.stringify(consulta);
+
+    if (ultimaConsulta.current === null) {
+      ultimaConsulta.current = chave;
+      return undefined;
+    }
+
+    if (ultimaConsulta.current === chave) return undefined;
+
+    const timer = setTimeout(() => {
+      ultimaConsulta.current = chave;
+      servidorRef.current.onConsultaChange(consulta);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [busca, filtros, ordenacao, direcao]);
 
   function obterValor(objeto, caminho) {
     return caminho
@@ -66,6 +98,9 @@ export default function PageTable({
   }
 
   const rowsProcessadas = useMemo(() => {
+    // Modo servidor: as linhas já chegam filtradas, ordenadas e paginadas
+    if (servidor) return rows;
+
     let resultado = [...rows];
 
     // =========================
@@ -148,6 +183,7 @@ export default function PageTable({
     direcao,
     search,
     filters,
+    servidor,
   ]);
 
   return (
@@ -274,6 +310,27 @@ export default function PageTable({
         loading={loading}
         emptyMessage={emptyMessage}
       />
+
+      {servidor && (
+        <TablePagination
+          component="div"
+          count={servidor.total}
+          page={servidor.pagina}
+          onPageChange={(_, novaPagina) =>
+            servidor.onPaginaChange(novaPagina)
+          }
+          rowsPerPage={servidor.tamanho}
+          onRowsPerPageChange={(event) =>
+            servidor.onTamanhoChange(Number(event.target.value))
+          }
+          rowsPerPageOptions={[10, 25, 50]}
+          labelRowsPerPage="Itens por página"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}–${to} de ${count}`
+          }
+          sx={{ borderTop: "1px solid #e2e8e4" }}
+        />
+      )}
     </Paper>
   );
 }

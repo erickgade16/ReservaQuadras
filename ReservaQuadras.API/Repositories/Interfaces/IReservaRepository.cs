@@ -1,10 +1,16 @@
-﻿using ReservaQuadras.API.Entities;
+﻿using ReservaQuadras.API.DTOs;
+using ReservaQuadras.API.Entities;
 
 namespace ReservaQuadras.API.Repositories;
 
 public interface IReservaRepository
 {
     Task<List<Reserva>> ListarAsync();
+
+    Task<(List<Reserva> Itens, int Total)> ListarPaginadoAsync(
+        ConsultaReservas consulta);
+
+    Task<List<Reserva>> ListarPorDataAsync(DateTime data);
 
     Task<Reserva?> BuscarPorIdAsync(int id);
 
