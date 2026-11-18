@@ -10,7 +10,6 @@ import {
   ListItemText,
   Typography,
   Avatar,
-  Button,
   IconButton,
   Tooltip,
 } from "@mui/material";
@@ -322,7 +321,7 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
           </Avatar>
 
           {!recolhido && (
-          <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ minWidth: 0, flexGrow: 1 }}>
             <Typography
               noWrap
               sx={{
@@ -333,51 +332,24 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
               {usuario?.nome || "Usuário"}
             </Typography>
 
-            <Typography
-              noWrap
-              sx={{
-                fontSize: 12,
-                color: "#7fa58e",
-              }}
-            >
-              Sistema
-            </Typography>
           </Box>
           )}
 
-          {recolhido ? (
-            <Tooltip title="Sair" placement="right">
-              <IconButton
-                onClick={logout}
-                aria-label="Sair"
-                size="small"
-                sx={{
-                  color: "#b4c8bb",
-                  "&:hover": {
-                    color: "#fff",
-                    backgroundColor: "#1b4d34",
-                  },
-                }}
-              >
-                <LogoutRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          ) : (
-          <Button
-            onClick={logout}
-            sx={{
-              color: "#b4c8bb",
-              textTransform: "none",
-              minWidth: "auto",
-              "&:hover": {
-                color: "#fff",
-                backgroundColor: "#1b4d34",
-              },
-            }}
-          >
-            Logout
-          </Button>
-          )}
+          <Tooltip title="Sair" placement="right">
+            <IconButton
+              onClick={logout}
+              aria-label="Sair"
+              sx={{
+                color: "#b4c8bb",
+                "&:hover": {
+                  color: "#fff",
+                  backgroundColor: "#1b4d34",
+                },
+              }}
+            >
+              <LogoutRoundedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
     </Drawer>
