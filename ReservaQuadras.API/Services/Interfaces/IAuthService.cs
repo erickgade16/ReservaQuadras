@@ -5,4 +5,6 @@ namespace ReservaQuadras.API.Services;
 public interface IAuthService
 {
     Task<LoginResponse?> LoginAsync(LoginRequest request);
+
+    Task RedefinirSenhaAsync(RedefinirSenhaRequest request);
 }

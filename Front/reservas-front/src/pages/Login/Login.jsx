@@ -20,7 +20,7 @@ import {
   email as validarEmail,
 } from "../../utils/validation";
 
-export default function Login({ onCadastro }) {
+export default function Login({ onCadastro, onEsqueciSenha }) {
   const { login } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -157,6 +157,23 @@ export default function Login({ onCadastro }) {
               },
             }}
           />
+
+          <Button
+            type="button"
+            variant="text"
+            size="small"
+            onClick={onEsqueciSenha}
+            disabled={carregando}
+            sx={{
+              alignSelf: "flex-end",
+              textTransform: "none",
+              color: "#198754",
+              fontWeight: 600,
+              mt: -1,
+            }}
+          >
+            Esqueci minha senha
+          </Button>
 
           {erro && (
             <Typography color="error">

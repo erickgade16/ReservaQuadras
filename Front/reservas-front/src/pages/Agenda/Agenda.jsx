@@ -21,6 +21,7 @@ import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import PageHeader from "../../components/PageHeader";
 import FormDialog from "../../components/FormDialog";
 import AppSnackbar from "../../components/AppSnackbar";
+import NovoUsuarioDialog from "../../components/NovoUsuarioDialog";
 import {
   buscarHorariosDisponiveis,
   buscarQuadras,
@@ -59,6 +60,7 @@ export default function Agenda() {
   const [usuarioId, setUsuarioId] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erroDialog, setErroDialog] = useState("");
+  const [novoUsuarioAberto, setNovoUsuarioAberto] = useState(false);
 
   const [snackbarAberto, setSnackbarAberto] = useState(false);
   const [snackbarMensagem, setSnackbarMensagem] = useState("");
@@ -456,6 +458,31 @@ export default function Agenda() {
                 />
               )}
               fullWidth
+            />
+
+            <Button
+              type="button"
+              size="small"
+              onClick={() => setNovoUsuarioAberto(true)}
+              sx={{
+                alignSelf: "flex-start",
+                textTransform: "none",
+                color: "#198754",
+                fontWeight: 600,
+                mt: -1,
+              }}
+            >
+              + Novo usuário
+            </Button>
+
+            <NovoUsuarioDialog
+              open={novoUsuarioAberto}
+              onClose={() => setNovoUsuarioAberto(false)}
+              onCriado={(novo) => {
+                setUsuarios((atuais) => [...atuais, novo]);
+                setUsuarioId(String(novo.id));
+                setNovoUsuarioAberto(false);
+              }}
             />
 
             {erroDialog && (

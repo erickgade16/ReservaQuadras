@@ -37,4 +37,23 @@ public class AuthController : ControllerBase
             return Unauthorized(ex.Message);
         }
     }
+
+    [HttpPost("redefinir-senha")]
+    public async Task<IActionResult> RedefinirSenha(
+        [FromBody] RedefinirSenhaRequest request)
+    {
+        try
+        {
+            await _authService.RedefinirSenhaAsync(request);
+
+            return Ok(new
+            {
+                mensagem = "Senha redefinida com sucesso."
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }

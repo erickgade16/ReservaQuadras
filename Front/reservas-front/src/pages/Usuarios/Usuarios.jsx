@@ -149,7 +149,7 @@ export default function Usuarios() {
         email: emailUsuario.trim(),
       };
 
-      if (!usuarioEditando || senha.trim()) {
+      if (!usuarioEditando) {
         usuario.senha = senha;
       }
 
@@ -244,7 +244,7 @@ export default function Usuarios() {
     <Box>
       <PageTable
         titulo="Usuários"
-        descricao="Visualize os usuários cadastrados no sistema."
+        descricao="Visualize os usuários e edite nome e e-mail."
         //textoBotao="Novo Usuário"
         //onClick={abrirFormularioNovo}
         search={{
@@ -310,26 +310,26 @@ export default function Usuarios() {
             ),
           },
 
-          // {
-          //   field: "acoes",
-          //   label: "Ações",
-          //   render: (usuario) => (
-          //     <Button
-          //       variant="outlined"
-          //       size="small"
-          //       startIcon={<EditRoundedIcon />}
-          //       onClick={() =>
-          //         abrirFormularioEdicao(usuario)
-          //       }
-          //       sx={{
-          //         textTransform: "none",
-          //         borderRadius: 2,
-          //       }}
-          //     >
-          //       Editar
-          //     </Button>
-          //   ),
-          // },
+          {
+            field: "acoes",
+            label: "Ações",
+            render: (usuario) => (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<EditRoundedIcon />}
+                onClick={() =>
+                  abrirFormularioEdicao(usuario)
+                }
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 2,
+                }}
+              >
+                Editar
+              </Button>
+            ),
+          },
 
 
         ]}
@@ -379,25 +379,18 @@ export default function Usuarios() {
             required
           />
 
-          <TextField
-            label={
-              usuarioEditando
-                ? "Nova senha"
-                : "Senha"
-            }
-            type="password"
-            value={senha}
-            onChange={(event) =>
-              setSenha(event.target.value)
-            }
-            fullWidth
-            required={!usuarioEditando}
-            helperText={
-              usuarioEditando
-                ? "Deixe vazio para manter a senha atual."
-                : ""
-            }
-          />
+          {!usuarioEditando && (
+            <TextField
+              label="Senha"
+              type="password"
+              value={senha}
+              onChange={(event) =>
+                setSenha(event.target.value)
+              }
+              fullWidth
+              required
+            />
+          )}
 
           {erro && (
             <Typography color="error">

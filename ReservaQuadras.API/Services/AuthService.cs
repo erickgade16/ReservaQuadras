@@ -43,6 +43,14 @@ public class AuthService : IAuthService
             );
         }
 
+        // Usuário de cadastro rápido ainda não tem senha de acesso
+        if (string.IsNullOrEmpty(usuario.Senha))
+        {
+            throw new InvalidOperationException(
+                "E-mail ou senha inválidos."
+            );
+        }
+
         var resultado = _passwordHasher.VerifyHashedPassword(
             usuario,
             usuario.Senha!,
@@ -97,6 +105,41 @@ public class AuthService : IAuthService
                 Email = usuario.Email
             }
         };
+    }
+
+    // ATENÇÃO: por enquanto, quem souber o e-mail consegue redefinir a senha,
+    // sem nenhum código. Antes de publicar o sistema, trocar por um código
+    // enviado por e-mail/SMS.
+    public async Task RedefinirSenhaAsync(RedefinirSenhaRequest request)
+    {
+        var emailNormalizado = (request.Email ?? "").Trim().ToLower();
+
+        if (string.IsNullOrWhiteSpace(request.NovaSenha) ||
+            request.NovaSenha.Length < 6)
+        {
+            throw new InvalidOperationException(
+                "A nova senha deve ter pelo menos 6 caracteres."
+            );
+        }
+
+        var usuario = await _usuarioRepository
+            .BuscarPorEmailAsync(emailNormalizado);
+
+        if (usuario == null)
+        {
+            throw new InvalidOperationException(
+                "E-mail não cadastrado."
+            );
+        }
+
+        usuario.Senha = _passwordHasher.HashPassword(
+            usuario,
+            request.NovaSenha
+        );
+
+        await _usuarioRepository.AtualizarAsync();
+
+        TentativasLogin.Remove(usuario.Id);
     }
 
     private string GerarToken(Usuario usuario)

@@ -32,6 +32,7 @@ import {
 } from "../../utils/validation";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import AppSnackbar from "../../components/AppSnackbar";
+import NovoUsuarioDialog from "../../components/NovoUsuarioDialog";
 
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
@@ -60,6 +61,7 @@ export default function Reservas() {
 
   const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
   const [carregandoHorarios, setCarregandoHorarios] = useState(false);
+  const [novoUsuarioAberto, setNovoUsuarioAberto] = useState(false);
 
 
   useEffect(() => {
@@ -553,6 +555,32 @@ export default function Reservas() {
                 </MenuItem>
               ))}
           </TextField>
+
+          <Button
+            type="button"
+            size="small"
+            onClick={() => setNovoUsuarioAberto(true)}
+            sx={{
+              alignSelf: "flex-start",
+              textTransform: "none",
+              color: "#198754",
+              fontWeight: 600,
+              mt: -1,
+            }}
+          >
+            + Novo usuário
+          </Button>
+
+          <NovoUsuarioDialog
+            open={novoUsuarioAberto}
+            onClose={() => setNovoUsuarioAberto(false)}
+            onCriado={(novo) => {
+              setUsuarios((atuais) => [...atuais, novo]);
+              setUsuarioId(novo.id);
+              setNovoUsuarioAberto(false);
+              mostrarSnackbar("Usuário criado com sucesso!");
+            }}
+          />
 
           {/* QUADRA */}
           <TextField

@@ -162,6 +162,23 @@ export async function criarUsuario(usuario) {
   return response.json();
 }
 
+export async function criarUsuarioRapido(usuario) {
+  const response = await fetch(`${API_URL}/Usuarios/rapido`, {
+    method: "POST",
+    headers: obterHeaders(),
+    body: JSON.stringify(usuario),
+  });
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível criar o usuário."
+    );
+  }
+
+  return response.json();
+}
+
 export async function editarUsuario(id, usuario) {
   const response = await fetch(`${API_URL}/Usuarios/${id}`, {
     method: "PUT",
@@ -193,6 +210,23 @@ export async function alterarStatusUsuario(id, ativo) {
     await tratarErroResponse(
       response,
       "Não foi possível alterar o status do usuário."
+    );
+  }
+
+  return response.json();
+}
+
+export async function atualizarPerfil(dados) {
+  const response = await fetch(`${API_URL}/Usuarios/perfil`, {
+    method: "PUT",
+    headers: obterHeaders(),
+    body: JSON.stringify(dados),
+  });
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível atualizar o perfil."
     );
   }
 
@@ -307,6 +341,29 @@ export async function fazerLogin(email, senha) {
     await tratarErroResponse(
       response,
       "Não foi possível realizar o login."
+    );
+  }
+
+  return await response.json();
+}
+
+// =========================
+// RECUPERAÇÃO DE SENHA
+// =========================
+
+export async function redefinirSenha(dados) {
+  const response = await fetch(`${API_URL}/Auth/redefinir-senha`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(dados),
+  });
+
+  if (!response.ok) {
+    await tratarErroResponse(
+      response,
+      "Não foi possível redefinir a senha."
     );
   }
 

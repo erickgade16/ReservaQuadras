@@ -20,6 +20,7 @@ import TodayRoundedIcon from "@mui/icons-material/TodayRounded";
 import SportsSoccerRoundedIcon from "@mui/icons-material/SportsSoccerRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -78,6 +79,10 @@ export default function Menu({ paginaAtual, setPaginaAtual }) {
     {
       nome: "Usuários",
       icone: <PeopleRoundedIcon />,
+    },
+    {
+      nome: "Perfil",
+      icone: <AccountCircleRoundedIcon />,
     },
   ];
 

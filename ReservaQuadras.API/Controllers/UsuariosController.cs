@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ReservaQuadras.API.DTOs;
 using ReservaQuadras.API.Entities;
 using ReservaQuadras.API.Services;
+using System.Security.Claims;
 
 namespace ReservaQuadras.API.Controllers;
 
@@ -38,6 +40,70 @@ public class UsuariosController : ControllerBase
                 new { id = usuarioCriado.Id },
                 usuarioCriado
             );
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("rapido")]
+    [Authorize]
+    public async Task<IActionResult> CriarRapido(
+        CriarUsuarioRapidoRequest request)
+    {
+        try
+        {
+            var usuario =
+                await _usuarioService.CriarRapidoAsync(request);
+
+            return Ok(new
+            {
+                usuario.Id,
+                usuario.Nome,
+                usuario.Email,
+                usuario.Ativo,
+                usuario.Bloqueado,
+                usuario.DataCadastro
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // O usuário só consegue alterar o PRÓPRIO perfil: o id vem do token, nunca da URL.
+    [HttpPut("perfil")]
+    [Authorize]
+    public async Task<IActionResult> AtualizarPerfil(
+        AtualizarPerfilRequest request)
+    {
+        var idTexto =
+            User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("nameid")
+            ?? User.FindFirstValue("sub");
+
+        if (!int.TryParse(idTexto, out var id))
+            return Unauthorized();
+
+        try
+        {
+            var usuario =
+                await _usuarioService.AtualizarPerfilAsync(
+                    id,
+                    request
+                );
+
+            if (usuario == null)
+                return NotFound("Usuário não encontrado.");
+
+            return Ok(new UsuarioResponse
+            {
+                Id = usuario.Id,
+                Nome = usuario.Nome,
+                Email = usuario.Email
+            });
         }
         catch (InvalidOperationException ex)
         {

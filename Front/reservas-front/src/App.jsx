@@ -6,10 +6,12 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import Agenda from "./pages/Agenda/Agenda";
 import Quadras from "./pages/Quadras/Quadras";
 import Usuarios from "./pages/Usuarios/Usuarios";
+import Perfil from "./pages/Perfil/Perfil";
 import Reservas from "./pages/Reservas/Reservas";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login/Login";
 import Cadastro from "./pages/Cadastro/Cadastro";
+import EsqueciSenha from "./pages/EsqueciSenha/EsqueciSenha";
 
 
 const drawerWidth = 240;
@@ -17,15 +19,23 @@ const drawerWidth = 240;
 function App() {
   const [paginaAtual, setPaginaAtual] = useState("Dashboard");
   const [telaLogin, setTelaLogin] = useState(true);
+  const [telaEsqueci, setTelaEsqueci] = useState(false);
   const { autenticado } = useAuth();
 
   if (!autenticado) {
-  return telaLogin ? (
-    <Login onCadastro={() => setTelaLogin(false)} />
-  ) : (
-    <Cadastro onVoltar={() => setTelaLogin(true)} />
-  );
-}
+    if (telaEsqueci) {
+      return <EsqueciSenha onVoltar={() => setTelaEsqueci(false)} />;
+    }
+
+    return telaLogin ? (
+      <Login
+        onCadastro={() => setTelaLogin(false)}
+        onEsqueciSenha={() => setTelaEsqueci(true)}
+      />
+    ) : (
+      <Cadastro onVoltar={() => setTelaLogin(true)} />
+    );
+  }
 
   const renderizarPagina = () => {
     switch (paginaAtual) {
@@ -43,6 +53,9 @@ function App() {
 
       case "Usuários":
         return <Usuarios />;
+
+      case "Perfil":
+        return <Perfil />;
 
       default:
         return <Quadras />;
